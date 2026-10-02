@@ -1146,8 +1146,8 @@ dialog p {
 .sails {
   animation: turn 40s linear infinite;
 }
-.firefly {
-  animation: twinkle 5s infinite ease-in-out;
+.particle-group {
+  animation: twinkle 7s infinite ease-in-out;
 }
 .fog {
   animation: drift 30s ease-in-out infinite alternate;
@@ -1186,12 +1186,12 @@ dialog p {
 @keyframes breathe {
   50% {
     transform: scale(1.12);
-    box-shadow: 0 0 70px #b3d48114;
+
   }
 }
 @keyframes softPulse {
   50% {
-    box-shadow: 0 0 24px #cbdf9d18;
+    opacity: .8;
   }
 }
 @media (min-width: 1500px) {
@@ -1759,3 +1759,48 @@ body {
 .story-details { font-size: .85rem; letter-spacing: .08em; min-height: 1.6rem; }
 .phase-story .breathing-orb { animation: none; }
 @media (prefers-reduced-motion: reduce) { .phase-story .landscape *, .phase-drifting .session-content, .phase-drifting .session-shade { transition: none; } }
+
+/* Keep only three opacity animations for the particle field; no per-particle layers. */
+.scene-idle *, .page-hidden *, .page-hidden *::before, .page-hidden *::after {
+  animation-play-state: paused !important;
+}
+.session-top { padding-inline: max(68px, env(safe-area-inset-left)) max(68px, env(safe-area-inset-right)); }
+.session-content, .story-copy, .settings > *, .range-row { min-width: 0; }
+.story-text { overflow-wrap: anywhere; }
+input[type="range"] { min-width: 0; height: 44px; }
+.switch { position: relative; }
+.switch::after { content: ""; position: absolute; inset: -8px 0; }
+button, a, input, select { touch-action: manipulation; }
+.fog-swipe { touch-action: pan-y; }
+.timer-option, .language-pill { min-height: 44px; }
+@media (max-width: 700px) {
+  .particles-2 { display: none; }
+  .fog, .smoke { animation: none; }
+  .bottom-nav { backdrop-filter: none; padding-left: max(10px, env(safe-area-inset-left)); padding-right: max(10px, env(safe-area-inset-right)); }
+  .map-object { backdrop-filter: none; }
+  .session-content { margin-top: clamp(18px, 4svh, 30px); }
+  .session-controls { width: calc(100% - 48px); max-width: 500px; }
+  .sleep-screen { padding-inline: max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right)); }
+}
+@media (max-width: 360px) {
+  .shell { padding-inline: max(14px, env(safe-area-inset-left)) max(14px, env(safe-area-inset-right)); }
+  .session-content { padding-inline: 18px; }
+  .story-text { line-height: 1.7; }
+  .timer-options { gap: 6px; }
+  .timer-option { padding-inline: 11px; }
+  .sound-card { padding: 18px; }
+}
+
+.timer-option { min-width: 44px; }
+@media (max-height: 500px) and (orientation: landscape) {
+  .sleep-screen { padding: max(16px, env(safe-area-inset-top)) max(68px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(68px, env(safe-area-inset-left)); }
+  .sleep-house { margin-bottom: 6px; }
+  .sleep-house > svg { width: 44px; height: 44px; }
+  .sleep-house i { width: 5px; height: 7px; left: 20px; top: 26px; }
+  .sleep-screen h1 { margin: 6px 0 10px; }
+  .sleep-time { font-size: 3rem; }
+  .timer-label { margin-top: 4px; }
+  .timer-options { margin-top: 10px; }
+  .sleep-pause { margin-top: 6px; }
+  .sleep-brand { display: none; }
+}

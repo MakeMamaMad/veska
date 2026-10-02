@@ -1,3 +1,4 @@
+import {pcm} from "./pcm.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { Soundscape, interfaceClickUrl, fogWaterUrl } from "../src/audio.js";
@@ -51,7 +52,8 @@ test("recordings load lazily, deduplicate requests and retry failures", async ()
   };
   const a = engine();
   a.ctx.resume = async () => {};
-  a.ctx.decodeAudioData = async () => ({ duration: 10 });
+  a.ctx.decodeAudioData = async () => pcm(2, 10000, 1000);
+  a.ctx.createBuffer = pcm;
   a.ctx.createBufferSource = () => ({ connect() {}, start() {} });
   a.channels.forEach((c) => {
     c.ready = false;

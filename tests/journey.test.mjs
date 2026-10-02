@@ -1,3 +1,4 @@
+import {pcm} from "./pcm.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 
@@ -67,8 +68,8 @@ test("full app journey: pause, early exit, four unlocks, persistence and timer e
     createGain() {
       return node();
     }
-    createBuffer(_, length) {
-      return { getChannelData: () => new Float32Array(length) };
+    createBuffer(channels, length, rate) {
+      return pcm(channels, length, rate);
     }
     createBufferSource() {
       return node();
@@ -83,7 +84,7 @@ test("full app journey: pause, early exit, four unlocks, persistence and timer e
       this.state = "running";
     }
     async decodeAudioData() {
-      return { duration: 42.5 };
+      return pcm(2, 425, 10);
     }
   }
   globalThis.window = {

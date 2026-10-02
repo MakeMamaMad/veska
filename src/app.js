@@ -28,6 +28,9 @@ const app = document.querySelector("#app"),
 audio.volume = [...state.mix];
 const narrator = new Narrator();
 let renderedView = "";
+const sceneObserver = window.IntersectionObserver ? new window.IntersectionObserver(entries => {
+  for (const entry of entries) entry.target.classList.toggle('scene-idle', !entry.isIntersecting);
+}, {threshold: 0}) : null;
 let audioBusy = false;
 let audioGeneration = 0;
 const preferredSound = () => ({ rain: 0, fire: 1, forest: 2 })[state.sound];
@@ -119,6 +122,7 @@ function sleepView() {
   return `<section class="sleep-screen"><button class="close-button" data-action="sleep-exit" aria-label="${c.return}">${icon("close")}</button><div class="sleep-house">${icon("home")}<i></i></div><p class="eyebrow">${sleep.finished ? c.sleepEndNote : c.sleepSub}</p><h1>${sleep.finished ? c.sleepEnd : c.sleepTitle}</h1><div class="sleep-time" id="sleep-time" role="timer" aria-label="${c.timer}">${clock(sleep.finished ? 0 : remaining(sleep.deadline))}</div><p class="timer-label">${c.timer}</p><div class="timer-options">${[15, 30, 45, 0].map((v) => button(v === 0 ? "∞" : `${v} ${c.min}`, "timer", `timer-option ${sleep.minutes === v ? "chosen" : ""}`, `data-minutes="${v}" aria-label="${v === 0 ? c.infinity : `${v} ${c.min}`}" aria-pressed="${sleep.minutes === v}"`)).join("")}</div>${button(`${icon(sleep.paused ? "play" : "pause")}${sleep.paused ? c.resume : c.pause}`, "sleep-pause", "sleep-pause", sleep.finished ? "disabled" : "")}<span class="sleep-brand">Vёska</span></section>`;
 }
 function render(focus = false) {
+  sceneObserver?.disconnect();
   const view = screen === "onboarding" ? `${screen}-${onboarding}` : screen;
   if (view !== renderedView) {
     app.classList.remove("screen-enter");
@@ -137,6 +141,7 @@ function render(focus = false) {
           : screen === "sleep"
             ? sleepView()
             : `<div class="shell">${header()}${screen === "village" ? village() : screen === "sounds" ? sounds() : profile()}${nav()}</div>`;
+  if (sceneObserver) app.querySelectorAll(".landscape").forEach(scene => sceneObserver.observe(scene));
   if (focus) {
     const title = app.querySelector("h1,.session-top");
     if (title) {
@@ -504,7 +509,11 @@ setInterval(() => {
       session.phase = phase;
       session.stage = stage;
       const spoke = narrate();
-      if (changed || spoke) render();
+      if (changed) render();
+      else if (spoke) {
+        const text = document.querySelector('.story-text');
+        if (text) text.textContent = session.text;
+      }
       const p = document.querySelector("#session-progress");
       if (p) p.value = session.elapsed;
       const time = document.querySelector("#session-time");
@@ -526,6 +535,7 @@ setInterval(() => {
   }
 }, 250);
 document.addEventListener("visibilitychange", () => {
+  document.documentElement.classList.toggle('page-hidden', document.hidden);
   save();
   if (document.hidden && screen === "session" && session.elapsed < 420 && !session.paused) {
     session.paused = true;

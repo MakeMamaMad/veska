@@ -1,3 +1,4 @@
+import { seamlessLoop } from "./loop-buffer.js";
 export const AMBIENCE = ["rain", "fire", "forest", "wind"].map(
   (name) => new URL(`../assets/audio/${name}.mp3`, import.meta.url).href,
 );
@@ -88,7 +89,7 @@ export class Soundscape {
           await response.arrayBuffer(),
         );
         const source = this.ctx.createBufferSource();
-        source.buffer = buffer;
+        source.buffer = seamlessLoop(this.ctx, buffer);
         source.loop = true;
         source.connect(channel.gain);
         source.start();

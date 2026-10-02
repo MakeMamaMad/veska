@@ -19,10 +19,12 @@ export const icons = {
 };
 export const icon = (name) =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name] || icons.leaf}</svg>`;
+const landscapes = new Map();
 export function landscape(level = 1) {
+  if (landscapes.has(level)) return landscapes.get(level);
   const tree = (x, y, s = 1) =>
     `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 4v52" stroke="#304c3b" stroke-width="3"/><path d="m0-28-17 32h9l-18 27h15l-21 28H32L12 31h14L8 4h10Z" fill="#183f32"/><path d="m0-28-12 32h8l-13 27h9l-14 28H0" fill="#244b39"/></g>`;
-  return `<svg class="landscape" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1000 640" role="img" aria-label="${level > 1 ? "Vёska" : "Vёska · quiet landscape"}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#112d30"/><stop offset="1" stop-color="#426253"/></linearGradient><linearGradient id="ground" x2="0" y2="1"><stop stop-color="#3a6043"/><stop offset="1" stop-color="#122f28"/></linearGradient><radialGradient id="glow"><stop stop-color="#f5c37a" stop-opacity=".5"/><stop offset="1" stop-color="#f5c37a" stop-opacity="0"/></radialGradient><filter id="blur"><feGaussianBlur stdDeviation="12"/></filter></defs>
+  const scene = `<svg class="landscape" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1000 640" role="img" aria-label="${level > 1 ? "Vёska" : "Vёska · quiet landscape"}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#112d30"/><stop offset="1" stop-color="#426253"/></linearGradient><linearGradient id="ground" x2="0" y2="1"><stop stop-color="#3a6043"/><stop offset="1" stop-color="#122f28"/></linearGradient><radialGradient id="glow"><stop stop-color="#f5c37a" stop-opacity=".5"/><stop offset="1" stop-color="#f5c37a" stop-opacity="0"/></radialGradient><filter id="blur"><feGaussianBlur stdDeviation="12"/></filter></defs>
   <rect width="1000" height="640" fill="url(#sky)"/><circle cx="737" cy="111" r="55" fill="#ccd4ab" opacity=".035"/><circle cx="737" cy="111" r="33" fill="#e2dfb9" opacity=".8"/><circle cx="751" cy="100" r="31" fill="#1b3838"/>
   ${Array.from({ length: 48 }, (_, i) => `<circle cx="${(i * 137 + 57) % 1000}" cy="${(i * 71 + 13) % 255}" r="${i % 3 === 0 ? 1.4 : 0.7}" fill="#dfe8ce" opacity="${0.18 + (i % 5) * 0.12}"/>`).join("")}
   <path d="M0 281Q120 160 266 245T531 231T798 228T1060 251V640H0" fill="#294a40"/><path d="M0 331Q162 205 374 321T721 289T1000 317V640H0" fill="#254637"/>
@@ -36,8 +38,11 @@ export function landscape(level = 1) {
   ${level >= 4 ? `<g transform="translate(586 465)"><path d="m-59-33 55-26 55 32v54l-55 23-55-26Z" fill="#645c42"/><path d="m-70-31 43-52 30 22 59 34-66 26Z" fill="#273b2c"/><path d="M-34-10v44l30 12V2" fill="#334433"/><path d="M11 5v14l21-8V-5Z" fill="#c0a66c"/></g>` : ""}
   ${level >= 5 ? `<g transform="translate(480 520)"><ellipse rx="65" ry="38" fill="url(#glow)"/><path d="m-22 9 43 14m-41 0L19 7" stroke="#58452c" stroke-width="9"/><path class="flame" d="M-17 12Q-27-4-7-24q-2 14 7 14Q11-17 9-33q28 38 9 50Z" fill="#d5a35d"/><path d="M-7 14Q-14 0 2-7q-2 7 8 14v10Z" fill="#f3d291"/></g>` : ""}
   <g class="fog" opacity=".12" filter="url(#blur)"><ellipse cx="300" cy="450" rx="280" ry="14" fill="#b7c8bb"/><ellipse cx="780" cy="355" rx="230" ry="13" fill="#b7c8bb"/></g>
-  ${Array.from({ length: 15 }, (_, i) => `<circle class="firefly" style="animation-delay:${i * 0.47}s" cx="${200 + ((i * 97) % 620)}" cy="${360 + ((i * 43) % 220)}" r="1.7" fill="#dce3a5"/>`).join("")}
+  ${Array.from({length:3},(_,group)=>`<g class="particle-group particles-${group}" style="animation-delay:-${group*1.7}s">${Array.from({length:5},(_,j)=>{const i=group*5+j;return `<circle class="firefly" cx="${200+((i*97)%620)}" cy="${360+((i*43)%220)}" r="1.7" fill="#dce3a5"/>`;}).join('')}</g>`).join('')}
+
   <path d="M0 571Q130 503 264 590T562 572T800 600T1000 542V640H0" fill="#102d24"/>
   ${tree(18, 551, 2.1)}${tree(973, 552, 2)}
   </svg>`;
+  landscapes.set(level,scene);
+  return scene;
 }
