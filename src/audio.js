@@ -22,6 +22,7 @@ export class Soundscape {
     this.channelRevision = [0, 0, 0, 0];
     this.effects = new Map();
     this.sessionMode = false;
+    this.sessionLevels = [0,0,0,0];
   }
   async setChannel(index, enabled) {
     if (!Number.isInteger(index) || index < 0 || index >= AMBIENCE.length)
@@ -126,7 +127,7 @@ export class Soundscape {
       channel.gain.gain.setTargetAtTime(
         this.active[index] && !this.paused
           ? this.sessionMode
-            ? 0.25
+            ? this.sessionLevels[index]
             : this.volume[index]
           : 0,
         this.ctx.currentTime,
@@ -166,6 +167,8 @@ export class Soundscape {
     this.stop();
     this.sessionMode = true;
     this.active[index] = true;
+    this.sessionLevels = [0,0,0,0];
+    this.sessionLevels[index] = .25;
     const time = this.ctx.currentTime;
     this.output.gain.cancelScheduledValues(time);
     this.output.gain.setValueAtTime(1, time);
@@ -174,6 +177,18 @@ export class Soundscape {
     const gain = this.channels[index].gain.gain;
     gain.setValueAtTime(0, time);
     gain.linearRampToValueAtTime(0.25, time + 4);
+  }
+  transitionBedtime(levels, seconds) {
+    this.sessionMode=true;
+    this.sessionLevels=[...levels];
+    const time=this.ctx.currentTime;
+    this.channels.forEach((channel,i)=>{
+      this.active[i]=levels[i]>0;
+      const gain=channel.gain.gain;
+      if(gain.cancelAndHoldAtTime)gain.cancelAndHoldAtTime(time);
+      else{const value=gain.value;gain.cancelScheduledValues(time);gain.setValueAtTime(value,time);}
+      gain.linearRampToValueAtTime(levels[i],time+seconds);
+    });
   }
   fadeOut(seconds = 8) {
     this.revision++;
@@ -228,7 +243,7 @@ export class Soundscape {
       !this.paused &&
       this.active.some(
         (on, index) =>
-          on && this.channels[index]?.ready && this.volume[index] > 0,
+          on && this.channels[index]?.ready && (this.sessionMode ? this.sessionLevels[index] : this.volume[index]) > 0,
       )
     );
   }

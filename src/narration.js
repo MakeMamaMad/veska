@@ -7,7 +7,7 @@ export const RECORDINGS = Object.fromEntries(
       Array.from(
         { length: 4 },
         (_, stage) =>
-          `../assets/narration/${lang}-${chapter + 1}-${stage + 1}.mp3`,
+          `../assets/narration/${lang}-${chapter + 1}-${stage + 1}-warm.mp3`,
       ),
     ),
   ]),
@@ -26,24 +26,32 @@ export class Narrator {
     this.token = 0;
     this.busy = false;
     this.paused = false;
+    this.cache = new Map();
   }
-  async play(ctx, url, destination = ctx.destination) {
+  async play(ctx, url, destination = ctx.destination, options = {}) {
     this.stop();
     if (!url) return;
     this.ctx = ctx;
     this.destination = destination;
+    this.volume = options.gain ?? .9;
+    this.soft = Boolean(options.soft);
+    this.offset = options.offset ?? 0;
     const token = this.token;
     this.busy = true;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
     try {
-      const response = await fetch(new URL(url, import.meta.url), {
-        signal: controller.signal,
-      });
-      if (!response.ok) throw new Error("Narration unavailable");
-      const buffer = await ctx.decodeAudioData(await response.arrayBuffer());
+      let buffer = this.cache.get(url);
+      if (!buffer) {
+        const response = await fetch(new URL(url, import.meta.url), {signal:controller.signal});
+        if (!response.ok) throw new Error("Narration unavailable");
+        buffer = await ctx.decodeAudioData(await response.arrayBuffer());
+        this.cache.set(url,buffer);
+      }
       if (token !== this.token) return;
+      if (ctx.currentTime > (options.expiresAt ?? Infinity)) { this.busy = false; return; }
       this.buffer = buffer;
+      this.end = Math.min(buffer.duration,this.offset+(options.duration ?? buffer.duration));
       if (!this.paused) this.resume();
     } catch (error) {
       if (token === this.token) {
@@ -57,28 +65,33 @@ export class Narrator {
   resume() {
     this.paused = false;
     if (!this.buffer || this.source) return;
-    if (this.offset >= this.buffer.duration) {
+    if (this.offset >= (this.end ?? this.buffer.duration)) {
       this.busy = false;
       return;
     }
     const source = this.ctx.createBufferSource();
     source.buffer = this.buffer;
     const gain = this.ctx.createGain();
-    gain.gain.value = 0.9;
+    gain.gain.value = this.volume ?? .9;
     source.connect(gain);
-    gain.connect(this.destination || this.ctx.destination);
+    let filter;
+    if (this.soft) {
+      filter = this.ctx.createBiquadFilter(); filter.type='lowpass';filter.frequency.value=4200;filter.Q.value=.5;
+      gain.connect(filter);filter.connect(this.destination || this.ctx.destination);
+    } else gain.connect(this.destination || this.ctx.destination);
     source.onended = () => {
       gain.disconnect();
+      filter?.disconnect();
       if (this.source === source) {
         this.source = null;
-        this.offset = this.buffer.duration;
+        this.offset = this.end ?? this.buffer.duration;
         this.busy = false;
       }
     };
     this.source = source;
     this.started = this.ctx.currentTime;
     this.busy = true;
-    source.start(0, this.offset);
+    source.start(0, this.offset, (this.end ?? this.buffer.duration)-this.offset);
   }
   pause() {
     this.paused = true;

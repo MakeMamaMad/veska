@@ -125,16 +125,26 @@ test("full app journey: pause, early exit, four unlocks, persistence and timer e
   assert.equal(saved().level, 1);
   for (let level = 2; level <= 5; level++) {
     await click("start");
-    advance(45);
+    advance(90);
     assert.match(app.innerHTML, /Зажечь фонарь/);
     await click("light");
     assert.match(app.innerHTML, /Фонарь освещает/);
-    advance(134);
+    advance(90);
+    assert.match(app.innerHTML, /data-action="detail"/);
+    await click("detail");
+    advance(240);
+    assert.match(app.innerHTML, /phase-drifting/);
+    assert.doesNotMatch(app.innerHTML, /data-action="detail"|data-action="fog"|data-action="light"/);
+    advance(299);
     assert.equal(saved().level, level - 1);
     advance(1);
     assert.equal(saved().level, level);
-    assert.match(app.innerHTML, /История завершена/);
-    await click("home");
+    assert.match(app.innerHTML, /sleep-screen/);
+    advance(479);
+    assert.doesNotMatch(app.innerHTML, /Звуки плавно затихли/);
+    advance(1);
+    assert.match(app.innerHTML, /Звуки плавно затихли/);
+    await click("sleep-exit");
   }
   assert.equal(saved().dates.length, 1);
   assert.ok(saved().seconds >= 730);

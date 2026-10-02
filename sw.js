@@ -1,4 +1,4 @@
-const CACHE = "veska-v3-mobile-mixer";
+const CACHE = "veska-v4-slow-evening";
 const ASSETS = [
   "./",
   "./index.html",
@@ -8,6 +8,8 @@ const ASSETS = [
   "./src/state.js",
   "./src/audio.js",
   "./src/narration.js",
+  "./src/session-plan.js",
+  "./src/voice-cues.js",
   "./audio-credits.html",
   "./src/art.js",
   "./src/content.js",

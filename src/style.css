@@ -1744,3 +1744,18 @@ body {
     transition: none;
   }
 }
+
+/* The last guided phase asks for no attention or interaction. */
+.phase-drifting .breathing-orb, .phase-drifting .landscape * { animation: none !important; }
+.phase-drifting .session-content { opacity: .5; transition: opacity 8s; }
+.phase-drifting .session-shade { background: rgba(0,0,0,.78); transition: background 8s; }
+.story-details { color: #d7bd7d; letter-spacing: 1em; font-size: 2rem; min-height: 3rem; transition: opacity 2s; }
+.story-text { transition: opacity 2s; }
+
+.phase-story .cottage, .phase-story .moon-path, .phase-story .firefly { opacity: .08; transition: opacity 3s ease; }
+.phase-story.details-1 .cottage, .phase-story.details-2 .cottage, .phase-story.details-3 .cottage { opacity: 1; }
+.phase-story.details-2 .moon-path, .phase-story.details-3 .moon-path { opacity: .65; }
+.phase-story.details-3 .firefly { opacity: .6; }
+.story-details { font-size: .85rem; letter-spacing: .08em; min-height: 1.6rem; }
+.phase-story .breathing-orb { animation: none; }
+@media (prefers-reduced-motion: reduce) { .phase-story .landscape *, .phase-drifting .session-content, .phase-drifting .session-shade { transition: none; } }

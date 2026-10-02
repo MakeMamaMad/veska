@@ -28,7 +28,7 @@ export function landscape(level = 1) {
   <path d="M0 281Q120 160 266 245T531 231T798 228T1060 251V640H0" fill="#294a40"/><path d="M0 331Q162 205 374 321T721 289T1000 317V640H0" fill="#254637"/>
   ${Array.from({ length: 21 }, (_, i) => tree(i * 53, 290 + Math.sin(i) * 20, 0.6 + (i % 4) * 0.1)).join("")}
   <path d="M-30 415Q142 281 359 362T710 340T1030 382L1060 640H0Z" fill="url(#ground)"/>
-  <path d="M610 326C530 379 667 407 521 451S322 502 311 640" fill="none" stroke="#738567" stroke-opacity=".23" stroke-width="27"/>
+  <path class="moon-path" d="M610 326C530 379 667 407 521 451S322 502 311 640" fill="none" stroke="#738567" stroke-opacity=".23" stroke-width="27"/>
   <path d="M1000 412Q793 389 776 433T681 488Q780 467 1000 490" fill="#68938b" opacity=".24"/>
   ${tree(108, 413, 1.4)}${tree(177, 402, 0.9)}${tree(876, 371, 1.2)}${tree(941, 412, 1.65)}${tree(62, 475, 1.8)}${tree(834, 443, 0.8)}
   ${level >= 2 ? `<g class="cottage"><ellipse cx="402" cy="424" rx="120" ry="72" fill="url(#glow)"/><path d="m323 383 77-33 91 44-83 39Z" fill="#0e241e" opacity=".6"/><path d="M336 352v69l70 29v-72Z" fill="#63583b"/><path d="m406 378 72-37v70l-72 39Z" fill="#3e4831"/><path d="m319 355 82-67 96 60-91 47Z" fill="#1c2e28"/><path d="m319 355 82-67 5 107Z" fill="#4b5543"/><path d="m401 298 78 51" stroke="#657057" stroke-width="3"/><path d="M365 316v-30l15 4v18" fill="#505a44"/><path d="m350 372 22 9v27l-22-9Zm36 15 12 5v27l-12-5Z" fill="#ecc58a"/><path d="m431 380 22-11v26l-22 11Z" fill="#ce9c5d"/><path d="M361 377v26m-11-17 22 8" stroke="#6b5c3c" stroke-width="2"/><path class="smoke" d="M372 281q-19-24 1-40t-4-43" fill="none" stroke="#bcc4aa" opacity=".18" stroke-width="9" filter="url(#blur)"/></g>` : ""}
