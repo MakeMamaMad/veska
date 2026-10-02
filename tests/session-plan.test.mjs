@@ -21,7 +21,7 @@ test('two-minute prelude then four phases, with no speech after fourteen minutes
 });
 test('sentence slices stay inside their recording',()=>{
   for(const chapters of Object.values(VOICE_CUES)) for(const parts of chapters) for(const part of parts)
-    for(const s of part.sentences) assert.ok(s.offset>=0&&s.duration>0&&s.offset+s.duration<=part.duration+.001);
+    for(const s of part.sentences) assert.ok(s.offset>=(part.offset ?? 0)-.001&&s.duration>0&&s.offset+s.duration<=(part.offset ?? 0)+part.duration+.001);
 });
 
 test('breathing completes ten 4-4-4 cycles without narration',()=>{

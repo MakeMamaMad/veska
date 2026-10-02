@@ -9,7 +9,7 @@ import {
   remaining,
   clock,
 } from "../src/state.js";
-test("first launch has empty village and onboarding", () => {
+test("first launch has a cottage and onboarding", () => {
   assert.equal(fresh().level, 1);
   assert.equal(fresh().onboarded, false);
 });
@@ -35,7 +35,7 @@ test("normalization constrains saved data", () => {
   assert.equal(s.level, 5);
   assert.equal(s.lang, "ru");
   assert.equal(s.seconds, 0);
-  assert.deepEqual(s.mix, [1, 0, 0.4, 0.6]);
+  assert.deepEqual(s.mix, [1, 0, 0.4, 0.6, .25, .15]);
   assert.deepEqual(s.dates, ["2026-10-01"]);
 });
 test("each completed session unlocks exactly one object and caps at four", () => {
@@ -67,24 +67,25 @@ test("serialized state restores preferences and progress", () => {
     ...complete(fresh()),
     onboarded: true,
     lang: "en",
-    mix: [0.7, 0.3, 0, 0],
+    mix: [0.7, 0.3, 0, 0, .25, .15],
     seconds: 180,
     voice: false,
   };
   assert.deepEqual(load({ getItem: () => JSON.stringify(saved) }), saved);
 });
 
-test('daily construction order is cottage, bonfire, mill, barn with no repeat reward',()=>{
- let s=fresh();
- for(const [day,obj] of [0,3,1,2].entries()) {
-  const now=new Date(2026,9,day+2);s=complete(s,now);
-  assert.equal(s.unlocked.at(-1),obj);assert.equal(s.currentDay,day+2);
-  assert.deepEqual(complete(s,now).unlocked,s.unlocked);
- }
+test('story completion reveals mill immediately, with no calendar gate or duplicate reward',()=>{
+ const now=new Date(2026,9,2);
+ const first=complete(fresh(),now,0);
+ assert.equal(first.currentDay,2);assert.deepEqual(first.unlocked,[0,1]);
+ assert.equal(complete(first,now,0).currentDay,2);
+ const second=complete(first,now,1);
+ assert.equal(second.currentDay,3);assert.deepEqual(second.unlocked,[0,1,3]);
 });
-test('legacy migration preserves mill and barn rather than replacing them',()=>{
- assert.deepEqual(normalize({level:4}).unlocked,[0,1,2]);
+test('migration preserves old buildings and adds the current location',()=>{
+ assert.deepEqual(normalize({level:4}).unlocked,[0,1,2,3]);
  assert.equal(normalize({level:4}).currentDay,4);
- assert.deepEqual(complete(normalize({level:4})).unlocked,[0,1,2,3]);
- assert.deepEqual(normalize({currentDay:3}).unlocked,[0,3]);
+ assert.deepEqual(normalize({currentDay:2,unlocked:[0,3]}).unlocked,[0,3,1]);
+ assert.equal(load({getItem:key=>key==='currentDay'?'2':null}).currentDay,2);
+ assert.deepEqual(fresh().unlocked,[0]);
 });

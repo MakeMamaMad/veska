@@ -2,6 +2,7 @@ import {pcm} from "./pcm.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { Soundscape, interfaceClickUrl, fogWaterUrl } from "../src/audio.js";
+import {MILL_LEVELS} from '../src/day2.js';
 function parameter() {
   return {
     value: 0,
@@ -25,16 +26,25 @@ function engine() {
   a.ctx = { currentTime: 100, state: "running" };
   a.master = { gain: parameter() };
   a.output = { gain: parameter() };
-  a.channels = Array.from({ length: 4 }, () => ({
+  a.channels = Array.from({ length: 6 }, () => ({
     gain: { gain: parameter() },
     ready: true,
   }));
   return a;
 }
+test('mill starts only wind at 25% and wooden creak at 15%, both fading in',()=>{
+ const a=engine();a.startBedtime(4,MILL_LEVELS);
+ assert.deepEqual(a.active,[false,false,false,false,true,true]);
+ assert.deepEqual(a.channels[4].gain.gain.events.at(-1),['ramp',.25,104]);
+ assert.deepEqual(a.channels[5].gain.gain.events.at(-1),['ramp',.15,104]);
+ a.sessionMode=false;a.volume[4]=.7;a.volume[5]=.1;a.apply();
+ assert.equal(a.channels[4].gain.gain.events.at(-1)[1],.7);
+ assert.equal(a.channels[5].gain.gain.events.at(-1)[1],.1);
+});
 test("mixer keeps rain 70% and fire 30% independent", () => {
   const a = engine();
-  a.active = [true, true, false, false];
-  a.volume = [0.7, 0.3, 0.4, 0.3];
+  a.active = [true, true, false, false, false, false];
+  a.volume = [0.7, 0.3, 0.4, 0.3, .25, .15];
   a.apply();
   assert.equal(a.channels[0].gain.gain.events.at(-1)[1], 0.7);
   assert.equal(a.channels[1].gain.gain.events.at(-1)[1], 0.3);
@@ -103,20 +113,20 @@ test("independent channel requests survive reversed downloads and rapid cancella
   a.init = ([index]) => new Promise((resolve) => pending.set(index, resolve));
   const rain = a.setChannel(0, true);
   const fire = a.setChannel(1, true);
-  assert.deepEqual(a.active, [true, true, false, false]);
+  assert.deepEqual(a.active, [true, true, false, false, false, false]);
   await a.setChannel(0, false);
   pending.get(1)();
   await fire;
   pending.get(0)();
   await rain;
-  assert.deepEqual(a.active, [false, true, false, false]);
+  assert.deepEqual(a.active, [false, true, false, false, false, false]);
   assert.equal(a.channels[0].gain.gain.events.at(-1)[1], 0);
   assert.equal(a.channels[1].gain.gain.events.at(-1)[1], 0.3);
   const forest = a.setChannel(2, true);
   a.stop();
   pending.get(2)();
   await forest;
-  assert.deepEqual(a.active, [false, false, false, false]);
+  assert.deepEqual(a.active, [false, false, false, false, false, false]);
 });
 
 test("failed channel download leaves the other channels playing", async () => {
@@ -126,7 +136,7 @@ test("failed channel download leaves the other channels playing", async () => {
     throw new Error("offline");
   };
   await assert.rejects(a.setChannel(1, true), /offline/);
-  assert.deepEqual(a.active, [true, false, false, false]);
+  assert.deepEqual(a.active, [true, false, false, false, false, false]);
   assert.equal(a.playing, true);
 });
 test("sleep fade is scheduled on audio clock exactly 8 seconds before deadline", () => {
@@ -152,7 +162,7 @@ test("stop clears all layers and paused state", () => {
   a.active.fill(true);
   a.paused = true;
   a.stop();
-  assert.deepEqual(a.active, [false, false, false, false]);
+  assert.deepEqual(a.active, [false, false, false, false, false, false]);
   assert.equal(a.paused, false);
   assert.equal(a.playing, false);
 });
@@ -160,7 +170,7 @@ test("stop clears all layers and paused state", () => {
 test("bedtime rain rises from zero to 25 percent in exactly four seconds", () => {
   const a = engine();
   a.startBedtime(0);
-  assert.deepEqual(a.active, [true, false, false, false]);
+  assert.deepEqual(a.active, [true, false, false, false, false, false]);
   assert.deepEqual(a.channels[0].gain.gain.events.slice(-2), [
     ["value", 0, 100],
     ["ramp", 0.25, 104],
@@ -178,7 +188,7 @@ test("exit fades the shared voice, ambience and interface bus to zero over eight
     ["ramp", 0, 108],
   ]);
   assert.equal(a.fading, true);
-  assert.deepEqual(a.active, [false, false, false, false]);
+  assert.deepEqual(a.active, [false, false, false, false, false, false]);
 });
 
 test("a new mix cancels the old fade and preserves the requested channel", async () => {
@@ -191,12 +201,12 @@ test("a new mix cancels the old fade and preserves the requested channel", async
   assert.equal(a.channels[1].gain.gain.events.at(-1)[1], 0.3);
 });
 
-test("all four channels retain headroom at maximum mixer volume", () => {
+test("all six channels retain headroom at maximum mixer volume", () => {
   const a = engine();
   a.active.fill(true);
   a.volume.fill(1);
   a.apply();
-  assert.equal(a.master.gain.events.at(-1)[1], 0.25);
+  assert.equal(a.master.gain.events.at(-1)[1], 1/6);
 });
 
 test("interface ASMR uses 40 percent click and 8 percent water through the common output", async () => {

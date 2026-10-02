@@ -1,11 +1,11 @@
-const CACHE = "veska-v7-dynamic-viewport";
+const CACHE = "veska-v8-day2-voice-progress";
 const ASSETS = [
   "./",
   "./index.html",
   "./icon.svg",
   "./manifest.webmanifest",
   "./src/app.js",
-  "./src/state.js",
+  "./src/state.js", "./src/day2.js",
   "./src/audio.js",
   "./src/loop-buffer.js",
   "./src/narration.js",

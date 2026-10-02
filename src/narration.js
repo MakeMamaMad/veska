@@ -1,3 +1,4 @@
+import {day2VoiceUrls} from './day2.js';
 // Only local, reviewed recordings belong here. Never put API credentials in the app.
 // Each completed chapter must contain four URLs, one per story paragraph.
 export const RECORDINGS = Object.fromEntries(
@@ -7,7 +8,7 @@ export const RECORDINGS = Object.fromEntries(
       Array.from(
         { length: 4 },
         (_, stage) =>
-          `../assets/narration/${lang}-${chapter + 1}-${stage + 1}-warm.mp3`,
+          chapter === 1 ? day2VoiceUrls[lang] : `../assets/narration/${lang}-${chapter + 1}-${stage + 1}-warm.mp3`,
       ),
     ),
   ]),
@@ -33,6 +34,7 @@ export class Narrator {
     if (!url) return;
     this.ctx = ctx;
     this.destination = destination;
+    this.onEnded = options.onEnded;
     this.volume = options.gain ?? .9;
     this.soft = Boolean(options.soft);
     this.offset = options.offset ?? 0;
@@ -79,13 +81,17 @@ export class Narrator {
       filter = this.ctx.createBiquadFilter(); filter.type='lowpass';filter.frequency.value=4200;filter.Q.value=.5;
       gain.connect(filter);filter.connect(this.destination || this.ctx.destination);
     } else gain.connect(this.destination || this.ctx.destination);
+    const token = this.token;
     source.onended = () => {
       gain.disconnect();
       filter?.disconnect();
-      if (this.source === source) {
+      if (this.source === source && token === this.token) {
         this.source = null;
         this.offset = this.end ?? this.buffer.duration;
         this.busy = false;
+        const done = this.onEnded;
+        this.onEnded = null;
+        done?.();
       }
     };
     this.source = source;
@@ -103,6 +109,7 @@ export class Narrator {
   }
   stop() {
     this.token++;
+    this.onEnded = null;
     const source = this.source;
     this.source = null;
     if (source) source.stop();
@@ -113,6 +120,7 @@ export class Narrator {
   }
   finishAfter(seconds = 8) {
     this.token++;
+    this.onEnded = null;
     this.busy = false;
     if (this.source) this.source.stop(this.ctx.currentTime + seconds);
   }

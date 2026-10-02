@@ -105,3 +105,16 @@ test("a slow download cannot start an expired phrase", async(t)=>{
   await n.play(ctx,'late',undefined,{expiresAt:3});
   assert.equal(n.busy,false);
 });
+
+test('completion fires once on natural end, never on pause, stop, replacement or fade', async()=>{
+ const n=new Narrator(); n.cache.set('clip',{duration:30}); let ended=0;
+ const ctx={currentTime:0,destination:{},
+  createBufferSource:()=>({connect(){},start(){},stop(){this.onended?.();}}),
+  createGain:()=>({gain:{value:0},connect(){},disconnect(){}})};
+ const play=()=>n.play(ctx,'clip',ctx.destination,{onEnded:()=>ended++});
+ await play();ctx.currentTime=3;n.pause();assert.equal(ended,0);
+ n.resume();const source=n.source;source.onended();source.onended();assert.equal(ended,1);
+ await play();n.stop();assert.equal(ended,1);
+ await play();await play();assert.equal(ended,1);
+ n.finishAfter(8);assert.equal(ended,1);
+});

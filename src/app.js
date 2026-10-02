@@ -1,5 +1,6 @@
+import {MILL_LEVELS, driftLevels} from './day2.js';
 import {
-  BUILD_ORDER, nextChapter, dayKey,
+  BUILD_ORDER, nextChapter,
   load,
   fresh,
   KEY,
@@ -46,8 +47,8 @@ let screen = state.onboarded ? "village" : "onboarding",
   lastAudioTime = 0,
   lastSave = 0;
 const t = () => copy[state.lang];
-const soundIcons = ["rain", "fire", "forest", "wind"];
-const objectSounds = [0, 3, 2, 1];
+const soundIcons = ["rain", "fire", "forest", "wind", "wind", "home"];
+const objectSounds = [0, 4, 2, 1];
 const button = (label, action, cls = "primary", attrs = "") =>
   `<button class="${cls}" data-action="${action}" ${attrs}>${label}</button>`;
 function toast(message) {
@@ -60,6 +61,7 @@ function toast(message) {
 function save() {
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
+    localStorage.setItem("currentDay", String(state.currentDay));
   } catch {
     if (!storageWarned) {
       toast(t().storageError);
@@ -91,8 +93,8 @@ function onBoard() {
 }
 function village() {
   const c = t(),
-    chapter = state.unlocked.length === 4 ? replay : nextChapter(state);
-  return `<div class="page village-page"><div class="page-heading"><div><p class="eyebrow">${c.evening}</p><h1>${c.greeting}</h1><p class="muted">${c.villageNote}</p></div><div class="level-badge">${icon("leaf")}<span>${c.level} ${Math.min(4,state.currentDay)}<small>${state.unlocked.length} / 4 ${c.unlocked}</small></span></div></div><section class="village-map day-${state.currentDay} grow-${lastUnlocked}">${landscape(state.currentDay, state.unlocked)}<div class="map-mist" style="opacity:${Math.max(0,.65-state.unlocked.length*.16)}" aria-hidden="true"></div><div class="map-top"><span>VЁSKA</span><span>${icon("moon")} ${state.lang === "ru" ? "Тихий вечер" : "A quiet evening"}</span></div>${[
+    chapter = state.currentDay >= 5 ? replay : nextChapter(state);
+  return `<div class="page village-page"><div class="page-heading"><div><p class="eyebrow">${c.evening}</p><h1>${c.greeting}</h1><p class="muted">${c.villageNote}</p></div><div class="level-badge">${icon("leaf")}<span>${c.level} ${Math.min(4,state.currentDay)}: ${c.objects[chapter]}<small>${state.unlocked.length} / 4 ${c.unlocked}</small></span></div></div><section class="village-map day-${state.currentDay} grow-${lastUnlocked}">${landscape(state.currentDay, state.unlocked)}<div class="map-mist" style="opacity:${Math.max(0,.65-state.unlocked.length*.16)}" aria-hidden="true"></div><div class="map-top"><span>VЁSKA</span><span>${icon("moon")} ${state.lang === "ru" ? "Тихий вечер" : "A quiet evening"}</span></div>${[
     0, 1, 2, 3,
   ]
     .filter((i) => state.unlocked.includes(i))
@@ -102,11 +104,11 @@ function village() {
     )
     .join(
       "",
-    )}<p class="map-caption">${state.level === 1 ? c.mapEmpty : c.mapHint}</p></section><div class="village-bottom"><section class="story-card"><div class="story-mark">${icon("moon")}</div><div class="story-copy"><p class="eyebrow">${c.chapter} · 0${Math.min(4,state.currentDay)}</p><h2>${c.chapters[chapter]}</h2><p class="muted">${c.chapterNotes[chapter]}</p>${state.lastBuildDate === dayKey() && state.unlocked.length < 4 ? `<p class="daily-note">${state.lang === "ru" ? "Сегодня свет уже зажжён. Следующая постройка — завтра; слушать можно сейчас." : "Today’s light is saved. The next place unlocks tomorrow; you can still listen now."}</p>` : ""}<span class="duration">${c.duration} <span>·</span> ${c.headphones}</span>${state.level === 5 ? `<label class="replay-label">${c.replay}<select id="replay">${c.chapters.map((v, i) => `<option value="${i}" ${replay === i ? "selected" : ""}>${v}</option>`).join("")}</select></label>` : ""}</div>${button(`${icon("play")}${c.start}`, "start", "primary start-button")}</section><div class="village-progress">${BUILD_ORDER.map(i => {const name=c.objects[i]; return `<div class="progress-place ${state.unlocked.includes(i) ? "unlocked" : ""}"><span>${icon(state.unlocked.includes(i) ? "check" : "lock")}</span><small>${name}</small></div>`;}).join("")}</div></div></div>`;
+    )}<p class="map-caption">${state.level === 1 ? c.mapEmpty : c.mapHint}</p></section><div class="village-bottom"><section class="story-card"><div class="story-mark">${icon("moon")}</div><div class="story-copy"><p class="eyebrow">${c.chapter} · 0${Math.min(4,state.currentDay)}</p><h2>${c.chapters[chapter]}</h2><p class="muted">${c.chapterNotes[chapter]}</p><span class="duration">${c.duration} <span>·</span> ${c.headphones}</span>${state.level === 5 ? `<label class="replay-label">${c.replay}<select id="replay">${c.chapters.map((v, i) => `<option value="${i}" ${replay === i ? "selected" : ""}>${v}</option>`).join("")}</select></label>` : ""}</div>${button(`${icon("play")}${c.start}: ${c.level} ${state.currentDay >= 5 ? BUILD_ORDER.indexOf(chapter)+1 : state.currentDay}`, "start", "primary start-button")}</section><div class="village-progress">${BUILD_ORDER.map(i => {const name=c.objects[i]; return `<div class="progress-place ${state.unlocked.includes(i) ? "unlocked" : ""}"><span>${icon(state.unlocked.includes(i) ? "check" : "lock")}</span><small>${name}</small></div>`;}).join("")}</div></div></div>`;
 }
 function sounds() {
   const c = t();
-  return `<div class="page sounds-page"><p class="eyebrow">${c.soundTab} / SOUNDSCAPES</p><h1>${c.mixTitle}</h1><p class="muted">${c.mixNote}</p><div class="sound-grid">${c.soundNames.map((name, i) => `<article class="sound-card sound-${i} ${audio.active[i] ? "enabled" : ""}"><div class="sound-card-top"><div class="sound-art">${icon(soundIcons[i])}</div><button class="switch" role="switch" aria-checked="${audio.active[i]}" aria-label="${name}" data-action="sound" data-index="${i}"><span></span></button></div><h2>${name}</h2><p class="muted">${c.soundNotes[i]}</p><div class="range-row">${icon("volume")}<input type="range" min="0" max="100" value="${Math.round(state.mix[i] * 100)}" data-volume="${i}" aria-label="${name} · ${state.lang === "ru" ? "Громкость" : "Volume"}"><output id="volume-${i}" data-output="${i}">${Math.round(state.mix[i] * 100)}%</output></div></article>`).join("")}</div><div class="mix-footer"><span class="muted">${audio.active.filter(Boolean).length} / 4 ${c.active}</span>${button(`${icon("moon")}${c.mixSleep}`, "mix-sleep")}${button(c.stop, "stop", "text-button")}</div><p class="footnote">${c.synthetic} ${c.sleepLimit} <a href="./audio-credits.html" target="_blank" rel="noopener noreferrer">${c.soundCredits}</a></p></div>`;
+  return `<div class="page sounds-page"><p class="eyebrow">${c.soundTab} / SOUNDSCAPES</p><h1>${c.mixTitle}</h1><p class="muted">${c.mixNote}</p><div class="sound-grid">${c.soundNames.slice(0, state.currentDay >= 2 ? 6 : 4).map((name, i) => `<article class="sound-card sound-${i} ${audio.active[i] ? "enabled" : ""}"><div class="sound-card-top"><div class="sound-art">${icon(soundIcons[i])}</div><button class="switch" role="switch" aria-checked="${audio.active[i]}" aria-label="${name}" data-action="sound" data-index="${i}"><span></span></button></div><h2>${name}</h2><p class="muted">${c.soundNotes[i]}</p><div class="range-row">${icon("volume")}<input type="range" min="0" max="100" value="${Math.round(state.mix[i] * 100)}" data-volume="${i}" aria-label="${name} · ${state.lang === "ru" ? "Громкость" : "Volume"}"><output id="volume-${i}" data-output="${i}">${Math.round(state.mix[i] * 100)}%</output></div></article>`).join("")}</div><div class="mix-footer"><span class="muted">${audio.active.filter(Boolean).length} / ${state.currentDay >= 2 ? 6 : 4} ${c.active}</span>${button(`${icon("moon")}${c.mixSleep}`, "mix-sleep")}${button(c.stop, "stop", "text-button")}</div><p class="footnote">${c.synthetic} ${c.sleepLimit} <a href="./audio-credits.html" target="_blank" rel="noopener noreferrer">${c.soundCredits}</a></p></div>`;
 }
 function profile() {
   const c = t();
@@ -119,11 +121,13 @@ function personalizeMix() {
   }
   audio.sessionMode = false;
   state.customMix = true;
+  if (session?.chapter === 1 || (!session && state.currentDay >= 2)) state.day2MixConfigured = true;
+  if (session) session.manualMix = true;
   state.mixEnabled = [...audio.active];
 }
 function mixerView() {
   const c=t();
-  return `<div class="sheet-handle" aria-hidden="true"></div><div class="sheet-heading"><h2 id="mix-title">${state.lang==='ru'?'Атмосфера вечера':'Your evening atmosphere'}</h2>${button(icon('close'),'close-mixer','sheet-close',`aria-label="${state.lang==='ru'?'Закрыть микшер':'Close mixer'}"`)}</div><p class="muted">${c.mixNote}</p><div class="sheet-tracks">${c.soundNames.map((name,i)=>`<div class="sheet-track"><div class="sheet-track-heading"><span>${icon(soundIcons[i])}${name}</span><button class="switch" role="switch" aria-checked="${audio.active[i]}" aria-label="${name}" data-action="sheet-sound" data-index="${i}"><span></span></button></div><div class="range-row"><input type="range" min="0" max="100" value="${Math.round((audio.sessionMode?audio.sessionLevels[i]:state.mix[i])*100)}" data-volume="${i}" aria-label="${name} · ${state.lang==='ru'?'Громкость':'Volume'}"><output data-output="${i}">${Math.round((audio.sessionMode?audio.sessionLevels[i]:state.mix[i])*100)}%</output></div></div>`).join('')}</div>`;
+  return `<div class="sheet-handle" aria-hidden="true"></div><div class="sheet-heading"><h2 id="mix-title">${state.lang==='ru'?'Атмосфера вечера':'Your evening atmosphere'}</h2>${button(icon('close'),'close-mixer','sheet-close',`aria-label="${state.lang==='ru'?'Закрыть микшер':'Close mixer'}"`)}</div><p class="muted">${c.mixNote}</p><div class="sheet-tracks">${c.soundNames.slice(0, state.currentDay >= 2 ? 6 : 4).map((name,i)=>`<div class="sheet-track"><div class="sheet-track-heading"><span>${icon(soundIcons[i])}${name}</span><button class="switch" role="switch" aria-checked="${audio.active[i]}" aria-label="${name}" data-action="sheet-sound" data-index="${i}"><span></span></button></div><div class="range-row"><input type="range" min="0" max="100" value="${Math.round((audio.sessionMode?audio.sessionLevels[i]:state.mix[i])*100)}" data-volume="${i}" aria-label="${name} · ${state.lang==='ru'?'Громкость':'Volume'}"><output data-output="${i}">${Math.round((audio.sessionMode?audio.sessionLevels[i]:state.mix[i])*100)}%</output></div></div>`).join('')}</div>`;
 }
 function breathingView() {
   const c=t(), breath=breathAt(session.elapsed), labels=state.lang==='ru'?['Вдох','Задержка','Выдох']:['Inhale','Hold','Exhale'];
@@ -189,10 +193,24 @@ function narrate() {
   session.nextCue = due.next;
   if (!due.cue) return false;
   session.text = due.cue.text;
+  const activeSession = session, cue = due.cue;
   if (state.voice && !session.paused)
-    narrator.play(audio.ctx, due.cue.url, audio.output, {...due.cue, expiresAt: audio.ctx.currentTime + 3})
+    narrator.play(audio.ctx, cue.url, audio.output, {...cue, expiresAt: audio.ctx.currentTime + 3,
+      onEnded: () => {
+        if (session !== activeSession || screen !== 'session') return;
+        session.heard.add(cue);
+        if (session.heard.size === session.plan.length) rewardSession();
+      }})
       .catch(() => toast(t().narrationMissing));
   return true;
+}
+function rewardSession() {
+  if (session.completed) return;
+  session.completed = true;
+  const before = state.unlocked;
+  state = complete(state, new Date(Date.now()), session.chapter);
+  lastUnlocked = state.unlocked.find(i => !before.includes(i)) ?? lastUnlocked;
+  save();
 }
 async function ensureAudio(
   indices = audio.active.flatMap((on, i) => (on ? [i] : [])),
@@ -216,7 +234,8 @@ async function ensureAudio(
   }
 }
 function setPreferred() {
-  audio.startBedtime(preferredSound());
+  const chapter = session?.chapter ?? nextChapter(state);
+  audio.startBedtime(preferredSound(), chapter === 1 ? MILL_LEVELS : undefined);
 }
 async function fullScreen() {
   try {
@@ -235,14 +254,18 @@ function endAudio() {
   save();
 }
 async function startSession() {
-  if (!(await ensureAudio([...new Set([preferredSound(), 0, 2, ...state.mixEnabled.flatMap((on,i)=>state.customMix && on ? [i] : [])])]))) return;
+  const chapter = state.currentDay >= 5 ? replay : nextChapter(state);
+  if (!(await ensureAudio([...new Set([...(chapter === 1 ? [4,5] : [preferredSound(),0,2]), ...state.mixEnabled.flatMap((on,i)=>state.customMix && on ? [i] : [])])]))) return;
   cancelVoice();
   session = {
-    chapter: state.unlocked.length === 4 ? replay : nextChapter(state),
+    chapter: state.currentDay >= 5 ? replay : nextChapter(state),
     stage: -1,
     elapsed: 0,
     phase: "prelude",
     nextCue: 0,
+    heard: new Set(),
+    completed: false,
+    manualMix: state.customMix && (chapter !== 1 || state.day2MixConfigured),
     details: 0,
     text: "",
     paused: false,
@@ -252,7 +275,7 @@ async function startSession() {
   session.plan = buildSessionPlan(state.lang, session.chapter);
   narrate();
   setPreferred();
-  if (state.customMix) {
+  if (session.manualMix) {
     audio.sessionMode = false;
     audio.active = [...state.mixEnabled];
     audio.apply();
@@ -283,14 +306,14 @@ function startSleep(seconds = 1800) {
 function togglePause() {
   session.paused = !session.paused;
   audio.paused = session.paused;
-  if (session.phase === "drifting" && !state.customMix) {
+  if (session.phase === "drifting" && !session.manualMix) {
     const fraction = Math.min(1, (session.elapsed - DRIFT_START) / 300);
-    audio.sessionLevels = session.driftFrom.map((v,i)=>v + ([.38,0,.14,0][i]-v)*fraction);
+    audio.sessionLevels = session.driftFrom.map((v,i)=>v + (driftLevels(session.chapter)[i]-v)*fraction);
     audio.active = audio.sessionLevels.map(v=>v>0);
   }
   audio.apply();
-  if (!session.paused && session.phase === "drifting" && !state.customMix)
-    audio.transitionBedtime([.38,0,.14,0], Math.max(0,GUIDED_END-session.elapsed));
+  if (!session.paused && session.phase === "drifting" && !session.manualMix)
+    audio.transitionBedtime(driftLevels(session.chapter), Math.max(0,GUIDED_END-session.elapsed));
   if (session.paused) narrator.pause();
   else narrator.resume();
   render();
@@ -557,16 +580,14 @@ setInterval(() => {
     const changed = phase !== session.phase || stage !== session.stage;
     if (phase === "ambience") {
       cancelVoice();
-      const before = state.unlocked;
-      state = complete(state, new Date(Date.now()), session.chapter);
-      lastUnlocked = state.unlocked.find(i=>!before.includes(i)) ?? lastUnlocked;
-      save();
-      if (!state.customMix) audio.transitionBedtime([.38, 0, .14, 0], 2);
+      // Silent/text mode finishes on the timeline; voiced mode requires every natural onended.
+      if (!state.voice) rewardSession();
+      if (!session.manualMix) audio.transitionBedtime(driftLevels(session.chapter), 2);
       startSleep(Math.max(0, SESSION_SECONDS - session.elapsed));
     } else {
-      if (phase === "drifting" && session.phase !== phase && !state.customMix) {
+      if (phase === "drifting" && session.phase !== phase && !session.manualMix) {
         session.driftFrom = [...audio.sessionLevels];
-        audio.transitionBedtime([.38, 0, .14, 0], Math.max(0, GUIDED_END - session.elapsed));
+        audio.transitionBedtime(driftLevels(session.chapter), Math.max(0, GUIDED_END - session.elapsed));
       }
       session.phase = phase;
       session.stage = stage;

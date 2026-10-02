@@ -24,7 +24,7 @@ export function stageAt(seconds) {
 }
 export function buildSessionPlan(lang, chapter) {
   const parts = VOICE_CUES[lang][chapter], common = VOICE_CUES[lang][0];
-  const full = (part,at) => ({url:part.url,offset:0,duration:part.duration,text:part.sentences.map(s=>s.text).join(' '),at,gain:.9,soft:false});
+  const full = (part,at) => ({url:part.url,offset:part.offset ?? 0,duration:part.duration,text:part.sentences.map(s=>s.text).join(' '),at,gain:.9,soft:false});
   const phrase = (part,index,at,gain=.9,soft=false) => ({url:part.url,...part.sentences[index],at,gain,soft});
   const cues=[full(parts[0],0),full(parts[1],90)];
   const breath=common[0].sentences.length-2;

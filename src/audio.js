@@ -1,7 +1,9 @@
+import {ambientWindUrl, ambientMillUrl} from './day2.js';
 import { seamlessLoop } from "./loop-buffer.js";
 export const AMBIENCE = ["rain", "fire", "forest", "wind-owls"].map(
   (name) => new URL(`../assets/audio/${name}.mp3`, import.meta.url).href,
 );
+AMBIENCE.push(ambientWindUrl, ambientMillUrl);
 export const interfaceClickUrl = new URL(
   "../assets/audio/interface-click.mp3",
   import.meta.url,
@@ -16,14 +18,14 @@ export class Soundscape {
   constructor() {
     this.ctx = null;
     this.channels = [];
-    this.active = [false, false, false, false];
-    this.volume = [0.25, 0.3, 0.4, 0.3];
+    this.active = AMBIENCE.map(() => false);
+    this.volume = [0.25, 0.3, 0.4, 0.3, .25, .15];
     this.paused = false;
     this.revision = 0;
-    this.channelRevision = [0, 0, 0, 0];
+    this.channelRevision = AMBIENCE.map(() => 0);
     this.effects = new Map();
     this.sessionMode = false;
-    this.sessionLevels = [0,0,0,0];
+    this.sessionLevels = AMBIENCE.map(() => 0);
   }
   async setChannel(index, enabled, {preservePause = false} = {}) {
     if (!Number.isInteger(index) || index < 0 || index >= AMBIENCE.length)
@@ -166,20 +168,21 @@ export class Soundscape {
       });
     this.setMaster();
   }
-  startBedtime(index) {
+  startBedtime(index, levels = AMBIENCE.map((_, i) => i === index ? .25 : 0)) {
     this.stop();
     this.sessionMode = true;
-    this.active[index] = true;
-    this.sessionLevels = [0,0,0,0];
-    this.sessionLevels[index] = .25;
+    this.active = levels.map(v => v > 0);
+    this.sessionLevels = [...levels];
     const time = this.ctx.currentTime;
     this.output.gain.cancelScheduledValues(time);
     this.output.gain.setValueAtTime(1, time);
     this.master.gain.cancelScheduledValues(time);
     this.master.gain.setValueAtTime(1, time);
-    const gain = this.channels[index].gain.gain;
-    gain.setValueAtTime(0, time);
-    gain.linearRampToValueAtTime(0.25, time + 4);
+    this.channels.forEach((channel, i) => {
+      const gain = channel.gain.gain;
+      gain.setValueAtTime(0, time);
+      gain.linearRampToValueAtTime(levels[i] ?? 0, time + 4);
+    });
   }
   transitionBedtime(levels, seconds) {
     this.sessionMode=true;

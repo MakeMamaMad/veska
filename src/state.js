@@ -1,21 +1,22 @@
-export const BUILD_ORDER = [0, 3, 1, 2];
-export const nextChapter = state => BUILD_ORDER.find(i => !state.unlocked.includes(i)) ?? 0;
+export const BUILD_ORDER = [0, 1, 3, 2];
+export const nextChapter = state => BUILD_ORDER[Math.min(3, state.currentDay - 1)];
 export const KEY = "veska.v1";
 export const fresh = () => ({
-  version: 2,
+  version: 3,
   onboarded: false,
   lang: "ru",
   obstacle: "stress",
   sound: "rain",
   level: 1,
   currentDay: 1,
-  unlocked: [],
+  unlocked: [0],
   lastBuildDate: null,
   customMix: false,
-  mixEnabled: [true, false, false, false],
+  day2MixConfigured: false,
+  mixEnabled: [true, false, false, false, false, false],
   seconds: 0,
   dates: [],
-  mix: [0.25, 0.3, 0.4, 0.3],
+  mix: [0.25, 0.3, 0.4, 0.3, 0.25, 0.15],
   voice: true,
 });
 export function normalize(raw) {
@@ -29,17 +30,17 @@ export function normalize(raw) {
   s.sound = ["rain", "forest", "fire"].includes(raw.sound)
     ? raw.sound
     : s.sound;
-  s.level = Math.max(1, Math.min(5, Math.floor(Number(raw.level) || 1)));
-  const legacyLevel = s.level;
-  s.unlocked = Array.isArray(raw.unlocked)
-    ? [...new Set(raw.unlocked.filter(i => Number.isInteger(i) && i >= 0 && i < 4))]
-    : raw.currentDay !== undefined
-      ? BUILD_ORDER.slice(0, Math.max(0, Math.min(4, Math.floor(Number(raw.currentDay) || 1)-1)))
-      : [0,1,2,3].slice(0, legacyLevel-1);
-  s.currentDay = s.unlocked.length + 1;
+  const day = Number(raw.currentDay ?? raw.level);
+  s.currentDay = Number.isFinite(day) ? Math.max(1, Math.min(5, Math.floor(day))) : 1;
   s.level = s.currentDay;
+  const legacy = Array.isArray(raw.unlocked)
+    ? raw.unlocked.filter(i => Number.isInteger(i) && i >= 0 && i < 4)
+    : [0,1,2,3].slice(0, Math.max(0, (Number(raw.level) || 1)-1));
+  // Preserve all existing buildings while revealing the current day's location.
+  s.unlocked = [...new Set([...legacy, ...BUILD_ORDER.slice(0, Math.min(4, s.currentDay))])];
   s.lastBuildDate = /^\d{4}-\d{2}-\d{2}$/.test(raw.lastBuildDate || '') ? raw.lastBuildDate : null;
   s.customMix = raw.customMix === true;
+  s.day2MixConfigured = raw.day2MixConfigured === true;
   s.mixEnabled = s.mixEnabled.map((v,i)=>typeof raw.mixEnabled?.[i] === 'boolean' ? raw.mixEnabled[i] : v);
   s.seconds = Math.max(0, Number.isFinite(raw.seconds) ? raw.seconds : 0);
   s.dates = Array.isArray(raw.dates)
@@ -55,7 +56,8 @@ export function normalize(raw) {
 }
 export function load(storage) {
   try {
-    return normalize(JSON.parse(storage.getItem(KEY)));
+    const saved = storage.getItem(KEY);
+    return normalize(saved ? JSON.parse(saved) : {currentDay: storage.getItem("currentDay") ?? 1});
   } catch {
     return fresh();
   }
@@ -77,10 +79,11 @@ export function streak(dates, now = new Date()) {
 export function complete(state, now = new Date(), chapter = nextChapter(state)) {
   const today = dayKey(now);
   const unlocked = [...state.unlocked];
-  const earned = state.lastBuildDate !== today && chapter === nextChapter(state) && !unlocked.includes(chapter);
-  if (earned) unlocked.push(chapter);
+  const earned = state.currentDay < 5 && chapter === nextChapter(state);
+  const currentDay = state.currentDay + (earned ? 1 : 0);
+  for (const i of BUILD_ORDER.slice(0, Math.min(4, currentDay))) if (!unlocked.includes(i)) unlocked.push(i);
   return {
-    ...state, unlocked, currentDay: unlocked.length + 1, level: unlocked.length + 1,
+    ...state, unlocked, currentDay, level: currentDay,
     lastBuildDate: earned ? today : state.lastBuildDate,
     dates: [...new Set([...state.dates, today])].sort(),
   };

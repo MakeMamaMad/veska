@@ -1,4 +1,4 @@
-// Pre-recorded speech, split at measured silent boundaries.
+// Pre-recorded speech, split only at measured silent boundaries.
 export const VOICE_CUES = {
   "ru": [
     [
@@ -159,8 +159,8 @@ export const VOICE_CUES = {
     ],
     [
       {
-        "url": "../assets/narration/ru-2-1-warm.mp3",
-        "duration": 15.27,
+        "url": "../assets/narration/ru-day2-mill.mp3",
+        "duration": 15.269637188208616,
         "sentences": [
           {
             "text": "Вечерняя тропинка ведёт тебя к полю.",
@@ -187,110 +187,119 @@ export const VOICE_CUES = {
             "offset": 8.768,
             "duration": 6.501
           }
-        ]
+        ],
+        "offset": 0
       },
       {
-        "url": "../assets/narration/ru-2-2-warm.mp3",
-        "duration": 15.296,
+        "url": "../assets/narration/ru-day2-mill.mp3",
+        "duration": 15.295759637188208,
         "sentences": [
           {
             "text": "В траве мерцает огонёк.",
-            "offset": 0,
+            "offset": 15.269637,
             "duration": 3.002
           },
           {
             "text": "Зажги свой фонарь, если хочешь видеть дорогу яснее.",
-            "offset": 3.002,
+            "offset": 18.271637,
             "duration": 3.767
           },
           {
             "text": "Поле мягко колышется вокруг.",
-            "offset": 6.769,
+            "offset": 22.038637,
             "duration": 2.224
           },
           {
             "text": "Ветер ничего не требует.",
-            "offset": 8.993,
+            "offset": 24.262637,
             "duration": 1.841
           },
           {
             "text": "Он просто приходит и уходит, как твоё дыхание.",
-            "offset": 10.834,
+            "offset": 26.103637,
             "duration": 4.462
           }
-        ]
+        ],
+        "offset": 15.269637
       },
       {
-        "url": "../assets/narration/ru-2-3-warm.mp3",
-        "duration": 16.027,
+        "duration": 25.991836734693877,
         "sentences": [
           {
-            "text": "Ты останавливаешься возле млына.",
-            "offset": 0,
-            "duration": 3.565
+            "text": "Ты останавливаешься возле старой мельницы.",
+            "offset": 30.565397,
+            "duration": 3.1309975000000003
           },
           {
-            "text": "Поднимается лёгкий ветер.",
-            "offset": 3.565,
-            "duration": 1.972
+            "text": "Мельник оставляет фонарь у двери и желает тебе тихой ночи.",
+            "offset": 33.696394,
+            "duration": 4.7673925
           },
           {
-            "text": "Большие деревянные крылья начинают медленно поворачиваться.",
-            "offset": 5.537,
-            "duration": 3.841
+            "text": "Лёгкий ветер начинает медленно вращать деревянные крылья.",
+            "offset": 38.463787,
+            "duration": 4.654659999999999
           },
           {
-            "text": "Не нужно им помогать.",
-            "offset": 9.378,
-            "duration": 1.683
+            "text": "Шестерёнки отвечают мягким, неторопливым скрипом.",
+            "offset": 43.118447,
+            "duration": 4.283594000000001
           },
           {
-            "text": "Всё движется в своём ритме.",
-            "offset": 11.061,
-            "duration": 1.902
+            "text": "Сегодня больше ничего не нужно заканчивать.",
+            "offset": 47.402041,
+            "duration": 3.303435499999999
           },
           {
-            "text": "Ты тоже можешь выбрать свой.",
-            "offset": 12.963,
-            "duration": 3.064
+            "text": "Пусть ветер делает свою работу.",
+            "offset": 50.705476,
+            "duration": 2.9407710000000016
+          },
+          {
+            "text": "А ты можешь просто отдохнуть.",
+            "offset": 53.646247,
+            "duration": 2.910986234693876
           }
-        ]
+        ],
+        "url": "../assets/narration/ru-day2-mill.mp3",
+        "offset": 30.565397
       },
       {
-        "url": "../assets/narration/ru-2-4-warm.mp3",
-        "duration": 18.535,
+        "url": "../assets/narration/ru-day2-mill.mp3",
+        "duration": 18.534943310657596,
         "sentences": [
           {
             "text": "Млын ожил.",
-            "offset": 0,
+            "offset": 56.557234,
             "duration": 2.286
           },
           {
             "text": "Его спокойное движение теперь часть твоего хутора.",
-            "offset": 2.286,
+            "offset": 58.843234,
             "duration": 3.351
           },
           {
             "text": "Ветер шепчет в траве, а небо становится глубже.",
-            "offset": 5.637,
+            "offset": 62.194234,
             "duration": 3.944
           },
           {
             "text": "Позволь мыслям проходить мимо.",
-            "offset": 9.581,
+            "offset": 66.138234,
             "duration": 2.623
           },
           {
             "text": "Здесь можно отдохнуть.",
-            "offset": 12.205,
+            "offset": 68.762234,
             "duration": 2.964
           },
           {
             "text": "Здесь достаточно просто быть.",
-            "offset": 15.169,
+            "offset": 71.726234,
             "duration": 3.366
           }
-        ]
+        ],
+        "offset": 56.557234
       }
     ],
     [
@@ -705,8 +714,8 @@ export const VOICE_CUES = {
     ],
     [
       {
-        "url": "../assets/narration/en-2-1-warm.mp3",
-        "duration": 14.042,
+        "url": "../assets/narration/en-day2-mill.mp3",
+        "duration": 14.041882086167801,
         "sentences": [
           {
             "text": "The evening path leads into a meadow.",
@@ -733,110 +742,119 @@ export const VOICE_CUES = {
             "offset": 9.836,
             "duration": 4.205
           }
-        ]
+        ],
+        "offset": 0
       },
       {
-        "url": "../assets/narration/en-2-2-warm.mp3",
-        "duration": 14.46,
+        "url": "../assets/narration/en-day2-mill.mp3",
+        "duration": 14.45984126984127,
         "sentences": [
           {
             "text": "A tiny light glimmers in the grass.",
-            "offset": 0,
+            "offset": 14.041882,
             "duration": 3.656
           },
           {
             "text": "Light your lantern if you wish.",
-            "offset": 3.656,
+            "offset": 17.697882,
             "duration": 1.996
           },
           {
             "text": "The meadow sways around you.",
-            "offset": 5.652,
+            "offset": 19.693882,
             "duration": 2.28
           },
           {
             "text": "The wind asks for nothing.",
-            "offset": 7.932,
+            "offset": 21.973882,
             "duration": 1.896
           },
           {
             "text": "It simply comes and goes, like your breath.",
-            "offset": 9.828,
+            "offset": 23.869882,
             "duration": 4.632
           }
-        ]
+        ],
+        "offset": 14.041882
       },
       {
-        "url": "../assets/narration/en-2-3-warm.mp3",
-        "duration": 15.583,
+        "duration": 23.719183673469388,
         "sentences": [
           {
-            "text": "You stop beside the mill.",
-            "offset": 0,
-            "duration": 2.922
+            "text": "You stop beside the old mill.",
+            "offset": 28.501723,
+            "duration": 2.8036845
           },
           {
-            "text": "A gentle breeze begins.",
-            "offset": 2.922,
-            "duration": 1.956
+            "text": "The miller leaves a lantern by the door and wishes you a quiet night.",
+            "offset": 31.305408,
+            "duration": 5.2596935
           },
           {
-            "text": "The broad wooden sails slowly turn.",
-            "offset": 4.879,
-            "duration": 2.734
+            "text": "A gentle breeze sets the wooden sails in motion.",
+            "offset": 36.565101,
+            "duration": 3.740408500000001
           },
           {
-            "text": "There is no need to help them.",
-            "offset": 7.613,
-            "duration": 1.868
+            "text": "The gears answer with a soft, unhurried creak.",
+            "offset": 40.30551,
+            "duration": 4.3907370000000014
           },
           {
-            "text": "Everything moves at its own pace.",
-            "offset": 9.481,
-            "duration": 2.612
+            "text": "Nothing needs to be finished tonight.",
+            "offset": 44.696247,
+            "duration": 2.879761499999997
           },
           {
-            "text": "You can choose your pace too.",
-            "offset": 12.093,
-            "duration": 3.49
+            "text": "Let the wind do its work.",
+            "offset": 47.576008,
+            "duration": 2.540012000000001
+          },
+          {
+            "text": "You can simply rest.",
+            "offset": 50.11602,
+            "duration": 2.1048866734693874
           }
-        ]
+        ],
+        "url": "../assets/narration/en-day2-mill.mp3",
+        "offset": 28.501723
       },
       {
-        "url": "../assets/narration/en-2-4-warm.mp3",
-        "duration": 16.811,
+        "url": "../assets/narration/en-day2-mill.mp3",
+        "duration": 16.810861678004535,
         "sentences": [
           {
             "text": "The mill is awake.",
-            "offset": 0,
+            "offset": 52.220907,
             "duration": 2.922
           },
           {
             "text": "Its gentle movement is now part of your village.",
-            "offset": 2.922,
+            "offset": 55.142907,
             "duration": 3.514
           },
           {
             "text": "Wind whispers in the grass as the sky deepens.",
-            "offset": 6.436,
+            "offset": 58.656907,
             "duration": 4.148
           },
           {
             "text": "Let thoughts drift past.",
-            "offset": 10.583,
+            "offset": 62.803907,
             "duration": 1.869
           },
           {
             "text": "You can rest here.",
-            "offset": 12.452,
+            "offset": 64.672907,
             "duration": 1.689
           },
           {
             "text": "Simply being here is enough.",
-            "offset": 14.141,
+            "offset": 66.361907,
             "duration": 2.67
           }
-        ]
+        ],
+        "offset": 52.220907
       }
     ],
     [
