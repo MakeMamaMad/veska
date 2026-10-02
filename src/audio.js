@@ -91,6 +91,8 @@ export class Soundscape {
         const source = this.ctx.createBufferSource();
         source.buffer = seamlessLoop(this.ctx, buffer);
         source.loop = true;
+        source.loopStart = 0;
+        source.loopEnd = source.buffer.duration;
         source.connect(channel.gain);
         source.start();
         channel.source = source;

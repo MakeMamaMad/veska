@@ -440,7 +440,7 @@ header {
   height: 21px;
 }
 .onboarding {
-  min-height: 100svh;
+  min-height: 100dvh;
   display: grid;
   grid-template-columns: 1fr 1fr;
 }
@@ -829,7 +829,7 @@ select {
 }
 .session-screen,
 .completed-screen {
-  height: 100svh;
+  height: 100dvh;
   min-height: 700px;
   position: relative;
   overflow: hidden;
@@ -1021,7 +1021,7 @@ dialog p {
   color: var(--accent);
 }
 .sleep-screen {
-  min-height: 100svh;
+  min-height: 100dvh;
   background: #030705;
   display: flex;
   flex-direction: column;
@@ -1378,7 +1378,7 @@ dialog p {
   .onboarding {
     display: flex;
     flex-direction: column;
-    min-height: 100svh;
+    min-height: 100dvh;
   }
   .onboard-art {
     height: 31svh;
@@ -1502,7 +1502,7 @@ dialog p {
   }
   .session-screen,
   .completed-screen {
-    min-height: 100svh;
+    min-height: 100dvh;
     height: auto;
   }
   .session-screen > .landscape,
@@ -1613,7 +1613,7 @@ dialog p {
   text-underline-offset: 3px;
 }
 
-/* Stable viewport height avoids jumps when mobile browser chrome retracts. */
+/* Dynamic viewport tracks the visible area as mobile browser chrome changes. */
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
@@ -1621,13 +1621,13 @@ html {
 body {
   min-width: 280px;
   min-height: 100vh;
-  min-height: 100svh;
+  min-height: 100dvh;
 }
 .session-screen {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  min-height: 100svh;
+  min-height: 100dvh;
   height: auto;
 }
 .session-controls {
@@ -1648,7 +1648,7 @@ body {
 .sleep-screen {
   position: relative;
   min-height: 100vh;
-  min-height: 100svh;
+  min-height: 100dvh;
   padding-bottom: max(50px, calc(env(safe-area-inset-bottom) + 24px));
 }
 @media (max-width: 700px) {
@@ -1778,7 +1778,7 @@ button, a, input, select { touch-action: manipulation; }
   .fog, .smoke { animation: none; }
   .bottom-nav { backdrop-filter: none; padding-left: max(10px, env(safe-area-inset-left)); padding-right: max(10px, env(safe-area-inset-right)); }
   .map-object { backdrop-filter: none; }
-  .session-content { margin-top: clamp(18px, 4svh, 30px); }
+  .session-content { margin-top: clamp(18px, 4dvh, 30px); }
   .session-controls { width: calc(100% - 48px); max-width: 500px; }
   .sleep-screen { padding-inline: max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right)); }
 }
@@ -1816,7 +1816,7 @@ button, a, input, select { touch-action: manipulation; }
 .mixer-fab svg { width:23px;height:23px; }
 .session-screen ~ .mixer-fab,.sleep-screen ~ .mixer-fab { bottom:max(24px,env(safe-area-inset-bottom)); }
 .sleep-screen ~ .mixer-fab { background:#0b130c; color:#66705a; }
-.mix-sheet { position:fixed; inset:auto 0 0; margin:0 auto; width:min(100%,560px); max-width:100%; max-height:85vh; max-height:85svh; overflow-y:auto; overscroll-behavior:contain; border:1px solid #b5cb9d30; border-bottom:0; border-radius:24px 24px 0 0; background:#142e25; color:var(--text); padding:12px 24px max(24px,env(safe-area-inset-bottom)); }
+.mix-sheet { position:fixed; inset:auto 0 0; margin:0 auto; width:min(100%,560px); max-width:100%; max-height:85vh; max-height:85dvh; overflow-y:auto; overscroll-behavior:contain; border:1px solid #b5cb9d30; border-bottom:0; border-radius:24px 24px 0 0; background:#142e25; color:var(--text); padding:12px 24px max(24px,env(safe-area-inset-bottom)); }
 .mix-sheet::backdrop { background:#020b08a6; }
 .mix-sheet[open] { animation:sheetArrive .45s ease-out; }
 @keyframes sheetArrive { from {transform:translateY(100%);opacity:.5;} to {transform:translateY(0);opacity:1;} }
@@ -1838,8 +1838,19 @@ button, a, input, select { touch-action: manipulation; }
 .breath-count {color:var(--accent);font-size:1.3rem;margin:12px 0;font-variant-numeric:tabular-nums;}
 .phase-prelude .muted {font-size:.9rem;line-height:1.7;}
 @media(max-width:360px) {.mix-sheet{padding-inline:16px;}.sheet-track-heading > span{font-size:.82rem;}.mixer-fab{right:14px;width:44px;height:44px;}}
-@media(max-height:500px) and (orientation:landscape) {.breath-stage{height:100px;}.guided-orb{width:75px;height:75px;}.phase-prelude .session-top{padding-top:20px;}.phase-prelude .session-content{margin-top:10px;}.mix-sheet{max-height:92svh;}}
+@media(max-height:500px) and (orientation:landscape) {.breath-stage{height:100px;}.guided-orb{width:75px;height:75px;}.phase-prelude .session-top{padding-top:20px;}.phase-prelude .session-content{margin-top:10px;}.mix-sheet{max-height:92dvh;}}
 @media(prefers-reduced-motion:reduce) {.guided-orb{transform:none!important;}.mix-sheet[open],.village-map [class*="grow-"]{animation:none;}}
 
 .mix-sheet::backdrop { backdrop-filter:none; }
 html:has(#mix-sheet[open]) { overflow:hidden; }
+
+/* Keep one document scroll: long text may extend past the viewport, never clip controls. */
+#app { height:100vh; height:100dvh; }
+.onboarding, .session-screen, .completed-screen, .sleep-screen {
+  height:auto;
+  min-height:100vh;
+  min-height:100dvh;
+}
+.session-screen > .landscape, .completed-screen > .landscape {
+  width:100%; height:100%; object-fit:cover;
+}

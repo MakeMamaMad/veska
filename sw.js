@@ -1,4 +1,4 @@
-const CACHE = "veska-v6-growing-village";
+const CACHE = "veska-v7-dynamic-viewport";
 const ASSETS = [
   "./",
   "./index.html",

@@ -54,7 +54,8 @@ test("recordings load lazily, deduplicate requests and retry failures", async ()
   a.ctx.resume = async () => {};
   a.ctx.decodeAudioData = async () => pcm(2, 10000, 1000);
   a.ctx.createBuffer = pcm;
-  a.ctx.createBufferSource = () => ({ connect() {}, start() {} });
+  let starts=0;
+  a.ctx.createBufferSource = () => ({ connect() {}, start() {starts++;} });
   a.channels.forEach((c) => {
     c.ready = false;
     c.pending = null;
@@ -66,9 +67,17 @@ test("recordings load lazily, deduplicate requests and retry failures", async ()
     await Promise.all([a.init([0]), a.init([0])]);
     assert.equal(calls, 2);
     assert.equal(a.channels[0].ready, true);
+    assert.equal(a.channels[0].source.loop, true);
+    assert.equal(a.channels[0].source.loopStart, 0);
+    assert.equal(a.channels[0].source.loopEnd, a.channels[0].source.buffer.duration);
     assert.equal(a.channels[1].ready, false);
+    const source=a.channels[0].source;
+    await a.setChannel(0,false);
+    await a.setChannel(0,true);
     await a.init([0]);
     assert.equal(calls, 2);
+    assert.equal(starts, 1, 'reuse one looping source instead of restarting the file');
+    assert.equal(a.channels[0].source, source);
   } finally {
     globalThis.fetch = originalFetch;
   }
