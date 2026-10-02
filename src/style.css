@@ -1900,3 +1900,7 @@ html:has(#mix-sheet[open]) { overflow:hidden; }
 .earned-note { display:inline-flex; align-items:center; gap:8px; font-size:.78rem; color:#9fb48b; margin:4px 0 0; }
 .earned-note svg { width:15px; height:15px; }
 @media (prefers-reduced-motion:reduce) { .morning-card, .start-dock .primary { animation:none; } }
+
+/* ---- Tonight's tuning from the onboarding answer ---- */
+.tonight { display:flex; gap:8px; align-items:flex-start; margin:10px 0 0; font-size:.76rem; line-height:1.45; color:#b9c9a6; }
+.tonight svg { flex:none; width:14px; height:14px; margin-top:2px; color:var(--warm); }

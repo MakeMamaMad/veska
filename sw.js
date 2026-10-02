@@ -1,4 +1,4 @@
-const CACHE = "veska-v10-russian-voice";
+const CACHE = "veska-v11-tonight";
 const ASSETS = [
   "./",
   "./index.html",
@@ -11,6 +11,7 @@ const ASSETS = [
   "./src/narration.js",
   "./src/session-plan.js",
   "./src/media-session.js",
+  "./src/tuning.js",
   "./src/voice-cues.js",
   "./audio-credits.html",
   "./src/art.js",

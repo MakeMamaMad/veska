@@ -1,5 +1,12 @@
 export const copy = {
   ru: {
+    breathLabels: { inhale: "Вдох", hold: "Задержка", exhale: "Выдох", rest: "Пауза" },
+    obstacleLabel: "Что мешает спать",
+    tonight: {
+      stress: "Сегодня: дыхание с длинным выдохом, чтобы отпустить напряжение.",
+      noise: "Сегодня: фон плотнее, чтобы заглушить город.",
+      thoughts: "Сегодня: дыхание квадратом со счётом, чтобы мыслям стало тише.",
+    },
     morningEyebrow: "ДОБРОЕ УТРО",
     morningTitle: "За ночь твой хутор подрос.",
     morningNote: "Новое место: {place}. Коснись его на карте, чтобы услышать.",
@@ -147,6 +154,13 @@ export const copy = {
     voiceUnavailable: "Озвучка ElevenLabs ещё не добавлена.",
   },
   en: {
+    breathLabels: { inhale: "Inhale", hold: "Hold", exhale: "Exhale", rest: "Rest" },
+    obstacleLabel: "What keeps you awake",
+    tonight: {
+      stress: "Tonight: breathing with a longer exhale, to let tension go.",
+      noise: "Tonight: a fuller soundscape to mask the city.",
+      thoughts: "Tonight: box breathing with a count, so thoughts grow quieter.",
+    },
     morningEyebrow: "GOOD MORNING",
     morningTitle: "Your village grew overnight.",
     morningNote: "A new place: {place}. Tap it on the map to hear it.",

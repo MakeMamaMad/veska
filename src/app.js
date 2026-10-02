@@ -19,7 +19,8 @@ import {
   hasAnyNarration,
 } from "./narration.js";
 import { icon, landscape } from "./art.js";
-import { buildSessionPlan, phaseAt, stageAt, takeDueCue, breathAt, timeline, driftStart, guidedEnd, earnAt } from "./session-plan.js";
+import { buildSessionPlan, phaseAt, stageAt, takeDueCue, timeline, driftStart, guidedEnd, earnAt } from "./session-plan.js";
+import { breathFor, breathPattern, bedtimeLevels, OBSTACLES } from "./tuning.js";
 import { startMedia, setMediaPlaying, stopMedia, holdWake, releaseWake } from "./media-session.js";
 import { copy } from "./content.js";
 
@@ -118,7 +119,7 @@ function village() {
     )
     .join(
       "",
-    )}<p class="map-caption">${pendingPlace ? fill(c.pendingCaption, pendingPlace) : state.pending ? c.earnedNote : state.level === 1 ? c.mapEmpty : c.mapHint}</p></section><div class="village-bottom"><section class="story-card"><div class="story-mark">${icon("moon")}</div><div class="story-copy"><p class="eyebrow">${c.chapter} · 0${Math.min(4,state.currentDay)}</p><h2>${c.chapters[chapter]}</h2><p class="muted">${c.chapterNotes[chapter]}</p>${lengthPicker(c)}<span class="duration">${c.headphones}</span>${state.level === 5 ? `<label class="replay-label">${c.replay}<select id="replay">${c.chapters.map((v, i) => `<option value="${i}" ${replay === i ? "selected" : ""}>${v}</option>`).join("")}</select></label>` : ""}</div>${button(startLabel(c, chapter), "start", "primary start-button")}</section><div class="village-progress">${BUILD_ORDER.map(i => {const name=c.objects[i]; return `<div class="progress-place ${state.unlocked.includes(i) ? "unlocked" : state.pending && upcoming === i ? "pending" : ""}"><span>${icon(state.unlocked.includes(i) ? "check" : "lock")}</span><small>${name}</small></div>`;}).join("")}</div></div><div class="start-dock">${button(startLabel(c, chapter), "start", "primary")}</div></div>`;
+    )}<p class="map-caption">${pendingPlace ? fill(c.pendingCaption, pendingPlace) : state.pending ? c.earnedNote : state.level === 1 ? c.mapEmpty : c.mapHint}</p></section><div class="village-bottom"><section class="story-card"><div class="story-mark">${icon("moon")}</div><div class="story-copy"><p class="eyebrow">${c.chapter} · 0${Math.min(4,state.currentDay)}</p><h2>${c.chapters[chapter]}</h2><p class="muted">${c.chapterNotes[chapter]}</p><p class="tonight">${icon("leaf")}${c.tonight[state.obstacle]}</p>${lengthPicker(c)}<span class="duration">${c.headphones}</span>${state.level === 5 ? `<label class="replay-label">${c.replay}<select id="replay">${c.chapters.map((v, i) => `<option value="${i}" ${replay === i ? "selected" : ""}>${v}</option>`).join("")}</select></label>` : ""}</div>${button(startLabel(c, chapter), "start", "primary start-button")}</section><div class="village-progress">${BUILD_ORDER.map(i => {const name=c.objects[i]; return `<div class="progress-place ${state.unlocked.includes(i) ? "unlocked" : state.pending && upcoming === i ? "pending" : ""}"><span>${icon(state.unlocked.includes(i) ? "check" : "lock")}</span><small>${name}</small></div>`;}).join("")}</div></div><div class="start-dock">${button(startLabel(c, chapter), "start", "primary")}</div></div>`;
 }
 function sounds() {
   const c = t();
@@ -126,7 +127,7 @@ function sounds() {
 }
 function profile() {
   const c = t();
-  return `<div class="page profile-page"><p class="eyebrow">${c.profileEyebrow}</p><h1>${c.profileTitle}</h1><p class="muted">${c.profileNote}</p><div class="stats"><div>${icon("sun")}<strong>${streak(state.dates)}</strong><span>${c.streak}</span></div><div>${icon("moon")}<strong>${Math.floor(state.seconds / 60)}</strong><span>${c.minutes}</span></div></div><h2>${c.achievements}</h2><div class="achievements">${BUILD_ORDER.map((i) => [c.objects[i], i]).map(([v, i]) => `<div class="achievement ${state.unlocked.includes(i) ? "earned" : ""}">${icon(state.unlocked.includes(i) ? ["home", "wind", "forest", "fire"][i] : "lock")}<div><strong>${v}</strong><small>${state.unlocked.includes(i) ? c.objectNotes[i] : `${c.locked} ${BUILD_ORDER.indexOf(i) + 1}`}</small></div>${state.unlocked.includes(i) ? icon("check") : ""}</div>`).join("")}</div><h2>${c.settings}</h2><section class="settings"><label>${c.langLabel}<select id="language"><option value="ru" ${state.lang === "ru" ? "selected" : ""}>Русский</option><option value="en" ${state.lang === "en" ? "selected" : ""}>English</option></select></label><div><span>${c.voice}<small>${hasAnyNarration(state.lang) ? c.voiceNote : c.voiceUnavailable}</small></span><button class="switch" role="switch" aria-checked="${Boolean(state.voice && hasAnyNarration(state.lang))}" aria-label="${c.voice}" data-action="voice" ${hasAnyNarration(state.lang) ? "" : "disabled"}><span></span></button></div><div><span>${c.subscription}</span><span class="muted">${c.soon}</span></div><a href="https://github.com/MakeMamaMad/veska/issues/new" target="_blank" rel="noopener noreferrer">${c.feedback}<span>↗</span></a></section><p class="footnote">${icon("lock")}${c.local}</p></div>`;
+  return `<div class="page profile-page"><p class="eyebrow">${c.profileEyebrow}</p><h1>${c.profileTitle}</h1><p class="muted">${c.profileNote}</p><div class="stats"><div>${icon("sun")}<strong>${streak(state.dates)}</strong><span>${c.streak}</span></div><div>${icon("moon")}<strong>${Math.floor(state.seconds / 60)}</strong><span>${c.minutes}</span></div></div><h2>${c.achievements}</h2><div class="achievements">${BUILD_ORDER.map((i) => [c.objects[i], i]).map(([v, i]) => `<div class="achievement ${state.unlocked.includes(i) ? "earned" : ""}">${icon(state.unlocked.includes(i) ? ["home", "wind", "forest", "fire"][i] : "lock")}<div><strong>${v}</strong><small>${state.unlocked.includes(i) ? c.objectNotes[i] : `${c.locked} ${BUILD_ORDER.indexOf(i) + 1}`}</small></div>${state.unlocked.includes(i) ? icon("check") : ""}</div>`).join("")}</div><h2>${c.settings}</h2><section class="settings"><label>${c.obstacleLabel}<select id="obstacle">${OBSTACLES.map((v, i) => `<option value="${v}" ${state.obstacle === v ? "selected" : ""}>${c.obstacles[i]}</option>`).join("")}</select></label><label>${c.langLabel}<select id="language"><option value="ru" ${state.lang === "ru" ? "selected" : ""}>Русский</option><option value="en" ${state.lang === "en" ? "selected" : ""}>English</option></select></label><div><span>${c.voice}<small>${hasAnyNarration(state.lang) ? c.voiceNote : c.voiceUnavailable}</small></span><button class="switch" role="switch" aria-checked="${Boolean(state.voice && hasAnyNarration(state.lang))}" aria-label="${c.voice}" data-action="voice" ${hasAnyNarration(state.lang) ? "" : "disabled"}><span></span></button></div><div><span>${c.subscription}</span><span class="muted">${c.soon}</span></div><a href="https://github.com/MakeMamaMad/veska/issues/new" target="_blank" rel="noopener noreferrer">${c.feedback}<span>↗</span></a></section><p class="footnote">${icon("lock")}${c.local}</p></div>`;
 }
 function personalizeMix() {
   if (audio.sessionMode) {
@@ -144,14 +145,14 @@ function mixerView() {
   return `<div class="sheet-handle" aria-hidden="true"></div><div class="sheet-heading"><h2 id="mix-title">${state.lang==='ru'?'Атмосфера вечера':'Your evening atmosphere'}</h2>${button(icon('close'),'close-mixer','sheet-close',`aria-label="${state.lang==='ru'?'Закрыть микшер':'Close mixer'}"`)}</div><p class="muted">${c.mixNote}</p><div class="sheet-tracks">${c.soundNames.slice(0, state.currentDay >= 2 ? 6 : 4).map((name,i)=>`<div class="sheet-track"><div class="sheet-track-heading"><span>${icon(soundIcons[i])}${name}</span><button class="switch" role="switch" aria-checked="${audio.active[i]}" aria-label="${name}" data-action="sheet-sound" data-index="${i}"><span></span></button></div><div class="range-row"><input type="range" min="0" max="100" value="${Math.round((audio.sessionMode?audio.sessionLevels[i]:state.mix[i])*100)}" data-volume="${i}" aria-label="${name} · ${state.lang==='ru'?'Громкость':'Volume'}"><output data-output="${i}">${Math.round((audio.sessionMode?audio.sessionLevels[i]:state.mix[i])*100)}%</output></div></div>`).join('')}</div>`;
 }
 function breathingView() {
-  const c=t(), breath=breathAt(session.elapsed), labels=state.lang==='ru'?['Вдох','Задержка','Выдох']:['Inhale','Hold','Exhale'];
-  return `<section class="session-screen phase-prelude"><button class="close-button" data-action="exit" aria-label="${c.exit}">${icon('close')}</button><div class="session-top"><p class="eyebrow">${state.lang==='ru'?'ДВЕ МИНУТЫ ДЛЯ СЕБЯ':'TWO MINUTES FOR YOU'}</p><span>${state.lang==='ru'?'Перед историей — немного тишины':'A little quiet before the story'}</span></div><div class="session-content"><div class="breath-stage"><div class="breathing-orb guided-orb" style="transform:scale(${breath.scale})">${icon('leaf')}</div></div><h1 id="breath-label">${labels[breath.phase]}</h1><p id="breath-count" class="breath-count">${breath.remaining}</p><p class="muted">${state.lang==='ru'?'Дыши в удобном для тебя ритме. Голос начнётся после практики.':'Breathe at a pace that feels comfortable. The story begins after the practice.'}</p></div><div class="session-controls"><div class="session-time"><span id="session-time">${clock(session.elapsed)}</span><span>02:00</span></div><progress id="session-progress" max="120" value="${session.elapsed}" aria-label="${c.breathe}"></progress><div class="session-buttons">${button(`${icon(session.paused?'play':'pause')}${session.paused?c.resume:c.pause}`,'pause','quiet-button')}${button(c.skipBreath,'skip-breath','text-button')}</div></div><dialog id="exit-dialog"><h2>${c.exit}?</h2><p class="muted">${c.exitNote}</p><div class="dialog-buttons">${button(c.stay,'stay')}${button(c.leave,'leave','quiet-button')}</div></dialog></section>`;
+  const c=t(), breath=breathFor(session.elapsed, breathPattern(state.obstacle)), labels=t().breathLabels;
+  return `<section class="session-screen phase-prelude"><button class="close-button" data-action="exit" aria-label="${c.exit}">${icon('close')}</button><div class="session-top"><p class="eyebrow">${state.lang==='ru'?'ДВЕ МИНУТЫ ДЛЯ СЕБЯ':'TWO MINUTES FOR YOU'}</p><span>${state.lang==='ru'?'Перед историей — немного тишины':'A little quiet before the story'}</span></div><div class="session-content"><div class="breath-stage"><div class="breathing-orb guided-orb" style="transform:scale(${breath.scale})">${icon('leaf')}</div></div><h1 id="breath-label">${labels[breath.name]}</h1><p id="breath-count" class="breath-count">${breath.remaining}</p><p class="muted">${state.lang==='ru'?'Дыши в удобном для тебя ритме. Голос начнётся после практики.':'Breathe at a pace that feels comfortable. The story begins after the practice.'}</p></div><div class="session-controls"><div class="session-time"><span id="session-time">${clock(session.elapsed)}</span><span>02:00</span></div><progress id="session-progress" max="120" value="${session.elapsed}" aria-label="${c.breathe}"></progress><div class="session-buttons">${button(`${icon(session.paused?'play':'pause')}${session.paused?c.resume:c.pause}`,'pause','quiet-button')}${button(c.skipBreath,'skip-breath','text-button')}</div></div><dialog id="exit-dialog"><h2>${c.exit}?</h2><p class="muted">${c.exitNote}</p><div class="dialog-buttons">${button(c.stay,'stay')}${button(c.leave,'leave','quiet-button')}</div></dialog></section>`;
 }
 function updateBreath() {
-  const breath=breathAt(session.elapsed), labels=state.lang==='ru'?['Вдох','Задержка','Выдох']:['Inhale','Hold','Exhale'];
+  const breath=breathFor(session.elapsed, breathPattern(state.obstacle)), labels=t().breathLabels;
   const orb=document.querySelector('.guided-orb'), label=document.querySelector('#breath-label'), count=document.querySelector('#breath-count');
   if(orb?.style) orb.style.transform=`scale(${breath.scale})`;
-  if(label) label.textContent=labels[breath.phase];
+  if(label) label.textContent=labels[breath.name];
   if(count) count.textContent=breath.remaining;
 }
 function sessionView() {
@@ -258,7 +259,7 @@ async function ensureAudio(
 }
 function setPreferred() {
   const chapter = session?.chapter ?? nextChapter(state);
-  audio.startBedtime(preferredSound(), chapter === 1 ? MILL_LEVELS : undefined);
+  audio.startBedtime(preferredSound(), chapter === 1 ? MILL_LEVELS : bedtimeLevels(state.obstacle, preferredSound()));
 }
 async function fullScreen() {
   try {
@@ -612,6 +613,11 @@ mixerSheet.addEventListener("input", onVolume);
 app.addEventListener("change", (e) => {
   if (e.target.id === "language") {
     state.lang = e.target.value;
+    save();
+    render();
+  }
+  if (e.target.id === "obstacle" && OBSTACLES.includes(e.target.value)) {
+    state.obstacle = e.target.value;
     save();
     render();
   }
