@@ -137,3 +137,10 @@ export function logSleep(state, mood, now = new Date()) {
   const date = dayKey(now);
   return { ...state, sleepLog: [...state.sleepLog.filter((e) => e.date !== date), { date, mood }].slice(-120) };
 }
+
+// Russian has three plural forms (1 вечер, 2 вечера, 5 вечеров); English has two.
+export function plural(n, forms) {
+  if (forms.length < 3) return forms[n === 1 ? 0 : 1];
+  const a = Math.abs(n) % 100, b = a % 10;
+  return forms[a > 10 && a < 20 ? 2 : b === 1 ? 0 : b >= 2 && b <= 4 ? 1 : 2];
+}

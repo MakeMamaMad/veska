@@ -131,3 +131,10 @@ test('pending evening, sleep log and length survive storage',()=>{
  assert.equal(normalize({pending:{chapter:9,at:1}}).pending,null);
  assert.equal(normalize({length:'weird'}).length,'full');
 });
+test('evening counter only grows and reads naturally in both languages', async () => {
+  const { plural } = await import('../src/state.js');
+  const ru = ['вечер', 'вечера', 'вечеров'], en = ['evening', 'evenings'];
+  assert.deepEqual([0, 1, 2, 4, 5, 11, 12, 14, 21, 22, 25, 101, 111].map((n) => plural(n, ru)),
+    ['вечеров', 'вечер', 'вечера', 'вечера', 'вечеров', 'вечеров', 'вечеров', 'вечеров', 'вечер', 'вечера', 'вечеров', 'вечер', 'вечеров']);
+  assert.deepEqual([0, 1, 2].map((n) => plural(n, en)), ['evenings', 'evening', 'evenings']);
+});
