@@ -218,3 +218,10 @@ test("interface ASMR uses 40 percent click and 8 percent water through the commo
   );
   assert.ok(nodes.every((n) => n.destination === a.output));
 });
+
+test('opening a channel from the sheet preserves a paused session',async()=>{
+ const a=engine();a.paused=true;a.init=async()=>{};
+ await a.setChannel(1,true,{preservePause:true});
+ assert.equal(a.paused,true);assert.equal(a.active[1],true);
+ assert.equal(a.channels[1].gain.gain.events.at(-1)[1],0);
+});

@@ -1,11 +1,18 @@
+export const BUILD_ORDER = [0, 3, 1, 2];
+export const nextChapter = state => BUILD_ORDER.find(i => !state.unlocked.includes(i)) ?? 0;
 export const KEY = "veska.v1";
 export const fresh = () => ({
-  version: 1,
+  version: 2,
   onboarded: false,
   lang: "ru",
   obstacle: "stress",
   sound: "rain",
   level: 1,
+  currentDay: 1,
+  unlocked: [],
+  lastBuildDate: null,
+  customMix: false,
+  mixEnabled: [true, false, false, false],
   seconds: 0,
   dates: [],
   mix: [0.25, 0.3, 0.4, 0.3],
@@ -23,6 +30,17 @@ export function normalize(raw) {
     ? raw.sound
     : s.sound;
   s.level = Math.max(1, Math.min(5, Math.floor(Number(raw.level) || 1)));
+  const legacyLevel = s.level;
+  s.unlocked = Array.isArray(raw.unlocked)
+    ? [...new Set(raw.unlocked.filter(i => Number.isInteger(i) && i >= 0 && i < 4))]
+    : raw.currentDay !== undefined
+      ? BUILD_ORDER.slice(0, Math.max(0, Math.min(4, Math.floor(Number(raw.currentDay) || 1)-1)))
+      : [0,1,2,3].slice(0, legacyLevel-1);
+  s.currentDay = s.unlocked.length + 1;
+  s.level = s.currentDay;
+  s.lastBuildDate = /^\d{4}-\d{2}-\d{2}$/.test(raw.lastBuildDate || '') ? raw.lastBuildDate : null;
+  s.customMix = raw.customMix === true;
+  s.mixEnabled = s.mixEnabled.map((v,i)=>typeof raw.mixEnabled?.[i] === 'boolean' ? raw.mixEnabled[i] : v);
   s.seconds = Math.max(0, Number.isFinite(raw.seconds) ? raw.seconds : 0);
   s.dates = Array.isArray(raw.dates)
     ? [
@@ -56,11 +74,15 @@ export function streak(dates, now = new Date()) {
   }
   return count;
 }
-export function complete(state, now = new Date()) {
+export function complete(state, now = new Date(), chapter = nextChapter(state)) {
+  const today = dayKey(now);
+  const unlocked = [...state.unlocked];
+  const earned = state.lastBuildDate !== today && chapter === nextChapter(state) && !unlocked.includes(chapter);
+  if (earned) unlocked.push(chapter);
   return {
-    ...state,
-    level: Math.min(5, state.level + 1),
-    dates: [...new Set([...state.dates, dayKey(now)])].sort(),
+    ...state, unlocked, currentDay: unlocked.length + 1, level: unlocked.length + 1,
+    lastBuildDate: earned ? today : state.lastBuildDate,
+    dates: [...new Set([...state.dates, today])].sort(),
   };
 }
 export function remaining(deadline, now = Date.now()) {

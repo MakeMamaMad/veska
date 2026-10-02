@@ -1,4 +1,5 @@
 import {
+  BUILD_ORDER, nextChapter, dayKey,
   load,
   fresh,
   KEY,
@@ -14,7 +15,7 @@ import {
   hasAnyNarration,
 } from "./narration.js";
 import { icon, landscape } from "./art.js";
-import { buildSessionPlan, phaseAt, stageAt, takeDueCue, SESSION_SECONDS } from "./session-plan.js";
+import { buildSessionPlan, phaseAt, stageAt, takeDueCue, breathAt, DRIFT_START, GUIDED_END, SESSION_SECONDS } from "./session-plan.js";
 import { copy } from "./content.js";
 
 let state;
@@ -28,6 +29,8 @@ const app = document.querySelector("#app"),
 audio.volume = [...state.mix];
 const narrator = new Narrator();
 let renderedView = "";
+let lastUnlocked = null;
+const mixerSheet = document.querySelector("#mix-sheet");
 const sceneObserver = window.IntersectionObserver ? new window.IntersectionObserver(entries => {
   for (const entry of entries) entry.target.classList.toggle('scene-idle', !entry.isIntersecting);
 }, {threshold: 0}) : null;
@@ -88,34 +91,59 @@ function onBoard() {
 }
 function village() {
   const c = t(),
-    chapter = state.level === 5 ? replay : state.level - 1;
-  return `<div class="page village-page"><div class="page-heading"><div><p class="eyebrow">${c.evening}</p><h1>${c.greeting}</h1><p class="muted">${c.villageNote}</p></div><div class="level-badge">${icon("leaf")}<span>${c.level} ${state.level}<small>${state.level - 1} / 4 ${c.unlocked}</small></span></div></div><section class="village-map">${landscape(state.level)}<div class="map-top"><span>VЁSKA</span><span>${icon("moon")} ${state.lang === "ru" ? "Тихий вечер" : "A quiet evening"}</span></div>${[
+    chapter = state.unlocked.length === 4 ? replay : nextChapter(state);
+  return `<div class="page village-page"><div class="page-heading"><div><p class="eyebrow">${c.evening}</p><h1>${c.greeting}</h1><p class="muted">${c.villageNote}</p></div><div class="level-badge">${icon("leaf")}<span>${c.level} ${Math.min(4,state.currentDay)}<small>${state.unlocked.length} / 4 ${c.unlocked}</small></span></div></div><section class="village-map day-${state.currentDay} grow-${lastUnlocked}">${landscape(state.currentDay, state.unlocked)}<div class="map-mist" style="opacity:${Math.max(0,.65-state.unlocked.length*.16)}" aria-hidden="true"></div><div class="map-top"><span>VЁSKA</span><span>${icon("moon")} ${state.lang === "ru" ? "Тихий вечер" : "A quiet evening"}</span></div>${[
     0, 1, 2, 3,
   ]
-    .filter((i) => state.level > i + 1)
+    .filter((i) => state.unlocked.includes(i))
     .map(
       (i) =>
         `<button class="map-object object-${i} ${audio.active[objectSounds[i]] ? "playing" : ""}" data-action="object" data-index="${i}" aria-label="${c.objects[i]} · ${c.objectNotes[i]}" aria-pressed="${audio.active[objectSounds[i]]}">${icon(audio.active[objectSounds[i]] ? "sound" : "play")}<span>${c.objects[i]}</span></button>`,
     )
     .join(
       "",
-    )}<p class="map-caption">${state.level === 1 ? c.mapEmpty : c.mapHint}</p></section><div class="village-bottom"><section class="story-card"><div class="story-mark">${icon("moon")}</div><div class="story-copy"><p class="eyebrow">${c.chapter} · 0${chapter + 1}</p><h2>${c.chapters[chapter]}</h2><p class="muted">${c.chapterNotes[chapter]}</p><span class="duration">${c.duration} <span>·</span> ${c.headphones}</span>${state.level === 5 ? `<label class="replay-label">${c.replay}<select id="replay">${c.chapters.map((v, i) => `<option value="${i}" ${replay === i ? "selected" : ""}>${v}</option>`).join("")}</select></label>` : ""}</div>${button(`${icon("play")}${c.start}`, "start", "primary start-button")}</section><div class="village-progress">${c.objects.map((name, i) => `<div class="progress-place ${state.level > i + 1 ? "unlocked" : ""}"><span>${icon(state.level > i + 1 ? "check" : "lock")}</span><small>${name}</small></div>`).join("")}</div></div></div>`;
+    )}<p class="map-caption">${state.level === 1 ? c.mapEmpty : c.mapHint}</p></section><div class="village-bottom"><section class="story-card"><div class="story-mark">${icon("moon")}</div><div class="story-copy"><p class="eyebrow">${c.chapter} · 0${Math.min(4,state.currentDay)}</p><h2>${c.chapters[chapter]}</h2><p class="muted">${c.chapterNotes[chapter]}</p>${state.lastBuildDate === dayKey() && state.unlocked.length < 4 ? `<p class="daily-note">${state.lang === "ru" ? "Сегодня свет уже зажжён. Следующая постройка — завтра; слушать можно сейчас." : "Today’s light is saved. The next place unlocks tomorrow; you can still listen now."}</p>` : ""}<span class="duration">${c.duration} <span>·</span> ${c.headphones}</span>${state.level === 5 ? `<label class="replay-label">${c.replay}<select id="replay">${c.chapters.map((v, i) => `<option value="${i}" ${replay === i ? "selected" : ""}>${v}</option>`).join("")}</select></label>` : ""}</div>${button(`${icon("play")}${c.start}`, "start", "primary start-button")}</section><div class="village-progress">${BUILD_ORDER.map(i => {const name=c.objects[i]; return `<div class="progress-place ${state.unlocked.includes(i) ? "unlocked" : ""}"><span>${icon(state.unlocked.includes(i) ? "check" : "lock")}</span><small>${name}</small></div>`;}).join("")}</div></div></div>`;
 }
 function sounds() {
   const c = t();
-  return `<div class="page sounds-page"><p class="eyebrow">${c.soundTab} / SOUNDSCAPES</p><h1>${c.mixTitle}</h1><p class="muted">${c.mixNote}</p><div class="sound-grid">${c.soundNames.map((name, i) => `<article class="sound-card sound-${i} ${audio.active[i] ? "enabled" : ""}"><div class="sound-card-top"><div class="sound-art">${icon(soundIcons[i])}</div><button class="switch" role="switch" aria-checked="${audio.active[i]}" aria-label="${name}" data-action="sound" data-index="${i}"><span></span></button></div><h2>${name}</h2><p class="muted">${c.soundNotes[i]}</p><div class="range-row">${icon("volume")}<input type="range" min="0" max="100" value="${Math.round(state.mix[i] * 100)}" data-volume="${i}" aria-label="${name} · ${state.lang === "ru" ? "Громкость" : "Volume"}"><output id="volume-${i}">${Math.round(state.mix[i] * 100)}%</output></div></article>`).join("")}</div><div class="mix-footer"><span class="muted">${audio.active.filter(Boolean).length} / 4 ${c.active}</span>${button(`${icon("moon")}${c.mixSleep}`, "mix-sleep")}${button(c.stop, "stop", "text-button")}</div><p class="footnote">${c.synthetic} ${c.sleepLimit} <a href="./audio-credits.html" target="_blank" rel="noopener noreferrer">${c.soundCredits}</a></p></div>`;
+  return `<div class="page sounds-page"><p class="eyebrow">${c.soundTab} / SOUNDSCAPES</p><h1>${c.mixTitle}</h1><p class="muted">${c.mixNote}</p><div class="sound-grid">${c.soundNames.map((name, i) => `<article class="sound-card sound-${i} ${audio.active[i] ? "enabled" : ""}"><div class="sound-card-top"><div class="sound-art">${icon(soundIcons[i])}</div><button class="switch" role="switch" aria-checked="${audio.active[i]}" aria-label="${name}" data-action="sound" data-index="${i}"><span></span></button></div><h2>${name}</h2><p class="muted">${c.soundNotes[i]}</p><div class="range-row">${icon("volume")}<input type="range" min="0" max="100" value="${Math.round(state.mix[i] * 100)}" data-volume="${i}" aria-label="${name} · ${state.lang === "ru" ? "Громкость" : "Volume"}"><output id="volume-${i}" data-output="${i}">${Math.round(state.mix[i] * 100)}%</output></div></article>`).join("")}</div><div class="mix-footer"><span class="muted">${audio.active.filter(Boolean).length} / 4 ${c.active}</span>${button(`${icon("moon")}${c.mixSleep}`, "mix-sleep")}${button(c.stop, "stop", "text-button")}</div><p class="footnote">${c.synthetic} ${c.sleepLimit} <a href="./audio-credits.html" target="_blank" rel="noopener noreferrer">${c.soundCredits}</a></p></div>`;
 }
 function profile() {
   const c = t();
-  return `<div class="page profile-page"><p class="eyebrow">${c.profile} / YOUR PEACE</p><h1>${c.profileTitle}</h1><p class="muted">${c.profileNote}</p><div class="stats"><div>${icon("sun")}<strong>${streak(state.dates)}</strong><span>${c.streak}</span></div><div>${icon("moon")}<strong>${Math.floor(state.seconds / 60)}</strong><span>${c.minutes}</span></div></div><h2>${c.achievements}</h2><div class="achievements">${c.objects.map((v, i) => `<div class="achievement ${state.level > i + 1 ? "earned" : ""}">${icon(state.level > i + 1 ? ["home", "wind", "forest", "fire"][i] : "lock")}<div><strong>${v}</strong><small>${state.level > i + 1 ? c.objectNotes[i] : `${c.locked} ${i + 1}`}</small></div>${state.level > i + 1 ? icon("check") : ""}</div>`).join("")}</div><h2>${c.settings}</h2><section class="settings"><label>${c.langLabel}<select id="language"><option value="ru" ${state.lang === "ru" ? "selected" : ""}>Русский</option><option value="en" ${state.lang === "en" ? "selected" : ""}>English</option></select></label><div><span>${c.voice}<small>${hasAnyNarration(state.lang) ? c.voiceNote : c.voiceUnavailable}</small></span><button class="switch" role="switch" aria-checked="${Boolean(state.voice && hasAnyNarration(state.lang))}" aria-label="${c.voice}" data-action="voice" ${hasAnyNarration(state.lang) ? "" : "disabled"}><span></span></button></div><div><span>${c.subscription}</span><span class="muted">${c.soon}</span></div><a href="https://github.com/MakeMamaMad/veska/issues/new" target="_blank" rel="noopener noreferrer">${c.feedback}<span>↗</span></a></section><p class="footnote">${icon("lock")}${c.local}</p></div>`;
+  return `<div class="page profile-page"><p class="eyebrow">${c.profile} / YOUR PEACE</p><h1>${c.profileTitle}</h1><p class="muted">${c.profileNote}</p><div class="stats"><div>${icon("sun")}<strong>${streak(state.dates)}</strong><span>${c.streak}</span></div><div>${icon("moon")}<strong>${Math.floor(state.seconds / 60)}</strong><span>${c.minutes}</span></div></div><h2>${c.achievements}</h2><div class="achievements">${c.objects.map((v, i) => `<div class="achievement ${state.unlocked.includes(i) ? "earned" : ""}">${icon(state.unlocked.includes(i) ? ["home", "wind", "forest", "fire"][i] : "lock")}<div><strong>${v}</strong><small>${state.unlocked.includes(i) ? c.objectNotes[i] : `${c.locked} ${BUILD_ORDER.indexOf(i) + 1}`}</small></div>${state.unlocked.includes(i) ? icon("check") : ""}</div>`).join("")}</div><h2>${c.settings}</h2><section class="settings"><label>${c.langLabel}<select id="language"><option value="ru" ${state.lang === "ru" ? "selected" : ""}>Русский</option><option value="en" ${state.lang === "en" ? "selected" : ""}>English</option></select></label><div><span>${c.voice}<small>${hasAnyNarration(state.lang) ? c.voiceNote : c.voiceUnavailable}</small></span><button class="switch" role="switch" aria-checked="${Boolean(state.voice && hasAnyNarration(state.lang))}" aria-label="${c.voice}" data-action="voice" ${hasAnyNarration(state.lang) ? "" : "disabled"}><span></span></button></div><div><span>${c.subscription}</span><span class="muted">${c.soon}</span></div><a href="https://github.com/MakeMamaMad/veska/issues/new" target="_blank" rel="noopener noreferrer">${c.feedback}<span>↗</span></a></section><p class="footnote">${icon("lock")}${c.local}</p></div>`;
+}
+function personalizeMix() {
+  if (audio.sessionMode) {
+    audio.volume = [...audio.sessionLevels];
+    state.mix = [...audio.volume];
+  }
+  audio.sessionMode = false;
+  state.customMix = true;
+  state.mixEnabled = [...audio.active];
+}
+function mixerView() {
+  const c=t();
+  return `<div class="sheet-handle" aria-hidden="true"></div><div class="sheet-heading"><h2 id="mix-title">${state.lang==='ru'?'Атмосфера вечера':'Your evening atmosphere'}</h2>${button(icon('close'),'close-mixer','sheet-close',`aria-label="${state.lang==='ru'?'Закрыть микшер':'Close mixer'}"`)}</div><p class="muted">${c.mixNote}</p><div class="sheet-tracks">${c.soundNames.map((name,i)=>`<div class="sheet-track"><div class="sheet-track-heading"><span>${icon(soundIcons[i])}${name}</span><button class="switch" role="switch" aria-checked="${audio.active[i]}" aria-label="${name}" data-action="sheet-sound" data-index="${i}"><span></span></button></div><div class="range-row"><input type="range" min="0" max="100" value="${Math.round((audio.sessionMode?audio.sessionLevels[i]:state.mix[i])*100)}" data-volume="${i}" aria-label="${name} · ${state.lang==='ru'?'Громкость':'Volume'}"><output data-output="${i}">${Math.round((audio.sessionMode?audio.sessionLevels[i]:state.mix[i])*100)}%</output></div></div>`).join('')}</div>`;
+}
+function breathingView() {
+  const c=t(), breath=breathAt(session.elapsed), labels=state.lang==='ru'?['Вдох','Задержка','Выдох']:['Inhale','Hold','Exhale'];
+  return `<section class="session-screen phase-prelude"><button class="close-button" data-action="exit" aria-label="${c.exit}">${icon('close')}</button><div class="session-top"><p class="eyebrow">${state.lang==='ru'?'ДВЕ МИНУТЫ ДЛЯ СЕБЯ':'TWO MINUTES FOR YOU'}</p><span>${state.lang==='ru'?'Перед историей — немного тишины':'A little quiet before the story'}</span></div><div class="session-content"><div class="breath-stage"><div class="breathing-orb guided-orb" style="transform:scale(${breath.scale})">${icon('leaf')}</div></div><h1 id="breath-label">${labels[breath.phase]}</h1><p id="breath-count" class="breath-count">${breath.remaining}</p><p class="muted">${state.lang==='ru'?'Дыши в удобном для тебя ритме. Голос начнётся после практики.':'Breathe at a pace that feels comfortable. The story begins after the practice.'}</p></div><div class="session-controls"><div class="session-time"><span id="session-time">${clock(session.elapsed)}</span><span>02:00</span></div><progress id="session-progress" max="120" value="${session.elapsed}" aria-label="${c.breathe}"></progress>${button(`${icon(session.paused?'play':'pause')}${session.paused?c.resume:c.pause}`,'pause','quiet-button')}</div><dialog id="exit-dialog"><h2>${c.exit}?</h2><p class="muted">${c.exitNote}</p><div class="dialog-buttons">${button(c.stay,'stay')}${button(c.leave,'leave','quiet-button')}</div></dialog></section>`;
+}
+function updateBreath() {
+  const breath=breathAt(session.elapsed), labels=state.lang==='ru'?['Вдох','Задержка','Выдох']:['Inhale','Hold','Exhale'];
+  const orb=document.querySelector('.guided-orb'), label=document.querySelector('#breath-label'), count=document.querySelector('#breath-count');
+  if(orb?.style) orb.style.transform=`scale(${breath.scale})`;
+  if(label) label.textContent=labels[breath.phase];
+  if(count) count.textContent=breath.remaining;
 }
 function sessionView() {
   const c = t();
-  return `<section class="session-screen phase-${session.phase} details-${session.details}">${landscape(Math.max(2, session.chapter + 2))}<div class="session-shade"></div>${session.stage === 0 ? `<div class="fog-veil ${session.fogCleared ? "cleared" : ""}" aria-hidden="true"></div>` : ""}<button class="close-button" data-action="exit" aria-label="${c.exit}">${icon("close")}</button><div class="session-top"><p class="eyebrow">${c.session}</p><span>${c.chapters[session.chapter]} · elevenlabs.io</span></div><div class="session-content"><div class="breathing-orb ${session.paused ? "paused" : ""}">${icon(session.lit ? "sun" : "leaf")}</div><p class="eyebrow">${session.phase === "breathing" ? c.breathe : session.phase === "story" ? (state.lang === "ru" ? "История · неспешно" : "Story · unhurried") : (state.lang === "ru" ? "Можно просто отдыхать" : "Just rest")}</p>${hasNarration(state.lang, session.chapter) ? "" : `<p class="narration-note">${c.narrationPending}</p>`}<p class="story-text">${session.text || ""}</p>${session.stage === 0 ? button(session.fogCleared ? c.fogDone : c.fog, "fog", "fog-swipe quiet-button", `aria-label="${c.fog}"`) : ""}${session.stage === 1 ? button(session.lit ? c.lightDone : `${icon("sun")}${c.light}`, "light", "lantern", session.lit ? "disabled" : "") : ""}${session.phase === "story" ? `<div class="story-details" aria-hidden="true">${session.details ? (state.lang === "ru" ? ["Тёплые окна", "Лунная тропинка", "Светлячки"] : ["Warm windows", "Moonlit path", "Fireflies"])[session.details - 1] : ""}</div>${button(state.lang === "ru" ? "Открыть тихую деталь" : "Reveal a quiet detail", "detail", "quiet-button", session.details >= 3 ? "disabled" : "")}` : ""}</div><div class="session-controls"><div class="session-time"><span id="session-time">${clock(session.elapsed)}</span><span>20:00</span></div><progress id="session-progress" max="1200" value="${session.elapsed}" aria-label="${c.session}"></progress>${button(`${icon(session.paused ? "play" : "pause")}${session.paused ? c.resume : c.pause}`, "pause", "quiet-button")}</div><dialog id="exit-dialog"><h2>${c.exit}?</h2><p class="muted">${c.exitNote}</p><div class="dialog-buttons">${button(c.stay, "stay")}${button(c.leave, "leave", "quiet-button")}</div></dialog></section>`;
+  if (session.phase === "prelude") return breathingView();
+  return `<section class="session-screen phase-${session.phase} details-${session.details}">${landscape(state.currentDay, [...new Set([...state.unlocked, session.chapter])])}<div class="session-shade"></div>${session.stage === 0 ? `<div class="fog-veil ${session.fogCleared ? "cleared" : ""}" aria-hidden="true"></div>` : ""}<button class="close-button" data-action="exit" aria-label="${c.exit}">${icon("close")}</button><div class="session-top"><p class="eyebrow">${c.session}</p><span>${c.chapters[session.chapter]} · elevenlabs.io</span></div><div class="session-content"><div class="breathing-orb ${session.paused ? "paused" : ""}">${icon(session.lit ? "sun" : "leaf")}</div><p class="eyebrow">${session.phase === "breathing" ? c.breathe : session.phase === "story" ? (state.lang === "ru" ? "История · неспешно" : "Story · unhurried") : (state.lang === "ru" ? "Можно просто отдыхать" : "Just rest")}</p>${hasNarration(state.lang, session.chapter) ? "" : `<p class="narration-note">${c.narrationPending}</p>`}<p class="story-text">${session.text || ""}</p>${session.stage === 0 ? button(session.fogCleared ? c.fogDone : c.fog, "fog", "fog-swipe quiet-button", `aria-label="${c.fog}"`) : ""}${session.stage === 1 ? button(session.lit ? c.lightDone : `${icon("sun")}${c.light}`, "light", "lantern", session.lit ? "disabled" : "") : ""}${session.phase === "story" ? `<div class="story-details" aria-hidden="true">${session.details ? (state.lang === "ru" ? ["Тёплые окна", "Лунная тропинка", "Светлячки"] : ["Warm windows", "Moonlit path", "Fireflies"])[session.details - 1] : ""}</div>${button(state.lang === "ru" ? "Открыть тихую деталь" : "Reveal a quiet detail", "detail", "quiet-button", session.details >= 3 ? "disabled" : "")}` : ""}</div><div class="session-controls"><div class="session-time"><span id="session-time">${clock(session.elapsed)}</span><span>22:00</span></div><progress id="session-progress" max="1320" value="${session.elapsed}" aria-label="${c.session}"></progress>${button(`${icon(session.paused ? "play" : "pause")}${session.paused ? c.resume : c.pause}`, "pause", "quiet-button")}</div><dialog id="exit-dialog"><h2>${c.exit}?</h2><p class="muted">${c.exitNote}</p><div class="dialog-buttons">${button(c.stay, "stay")}${button(c.leave, "leave", "quiet-button")}</div></dialog></section>`;
 }
 function completedView() {
   const c = t();
-  return `<section class="completed-screen">${landscape(state.level)}<div class="completion-card"><div class="complete-check">${icon("check")}</div><p class="eyebrow">${c.objects[session.chapter]}</p><h1>${c.completed}</h1><p class="muted">${c.completedNote}</p>${button(`${icon("moon")}${c.sleep}`, "sleep")}${button(c.home, "home", "text-button")}</div></section>`;
+  return `<section class="completed-screen">${landscape(state.currentDay, state.unlocked)}<div class="completion-card"><div class="complete-check">${icon("check")}</div><p class="eyebrow">${c.objects[session.chapter]}</p><h1>${c.completed}</h1><p class="muted">${c.completedNote}</p>${button(`${icon("moon")}${c.sleep}`, "sleep")}${button(c.home, "home", "text-button")}</div></section>`;
 }
 function sleepView() {
   const c = t();
@@ -141,6 +169,8 @@ function render(focus = false) {
           : screen === "sleep"
             ? sleepView()
             : `<div class="shell">${header()}${screen === "village" ? village() : screen === "sounds" ? sounds() : profile()}${nav()}</div>`;
+  if (screen !== "onboarding") app.insertAdjacentHTML?.('beforeend', button(icon('music'), 'open-mixer', 'mixer-fab', `aria-label="${state.lang === 'ru' ? 'Настроить атмосферу' : 'Adjust atmosphere'}" ${screen === 'sleep' && sleep.finished ? 'disabled' : ''}`));
+  if (screen === "village") lastUnlocked = null;
   if (sceneObserver) app.querySelectorAll(".landscape").forEach(scene => sceneObserver.observe(scene));
   if (focus) {
     const title = app.querySelector("h1,.session-top");
@@ -205,13 +235,13 @@ function endAudio() {
   save();
 }
 async function startSession() {
-  if (!(await ensureAudio([...new Set([preferredSound(), 0, 2])]))) return;
+  if (!(await ensureAudio([...new Set([preferredSound(), 0, 2, ...state.mixEnabled.flatMap((on,i)=>state.customMix && on ? [i] : [])])]))) return;
   cancelVoice();
   session = {
-    chapter: state.level === 5 ? replay : state.level - 1,
-    stage: 0,
+    chapter: state.unlocked.length === 4 ? replay : nextChapter(state),
+    stage: -1,
     elapsed: 0,
-    phase: "breathing",
+    phase: "prelude",
     nextCue: 0,
     details: 0,
     text: "",
@@ -222,6 +252,11 @@ async function startSession() {
   session.plan = buildSessionPlan(state.lang, session.chapter);
   narrate();
   setPreferred();
+  if (state.customMix) {
+    audio.sessionMode = false;
+    audio.active = [...state.mixEnabled];
+    audio.apply();
+  }
   audio.preloadEffect(interfaceClickUrl).catch(() => {});
   audio.preloadEffect(fogWaterUrl).catch(() => {});
   screen = "session";
@@ -248,25 +283,41 @@ function startSleep(seconds = 1800) {
 function togglePause() {
   session.paused = !session.paused;
   audio.paused = session.paused;
-  if (session.phase === "drifting") {
-    const fraction = Math.min(1, (session.elapsed - 420) / 300);
+  if (session.phase === "drifting" && !state.customMix) {
+    const fraction = Math.min(1, (session.elapsed - DRIFT_START) / 300);
     audio.sessionLevels = session.driftFrom.map((v,i)=>v + ([.38,0,.14,0][i]-v)*fraction);
     audio.active = audio.sessionLevels.map(v=>v>0);
   }
   audio.apply();
-  if (!session.paused && session.phase === "drifting")
-    audio.transitionBedtime([.38,0,.14,0], Math.max(0,720-session.elapsed));
+  if (!session.paused && session.phase === "drifting" && !state.customMix)
+    audio.transitionBedtime([.38,0,.14,0], Math.max(0,GUIDED_END-session.elapsed));
   if (session.paused) narrator.pause();
   else narrator.resume();
   render();
 }
-app.addEventListener("click", async (e) => {
+async function handleAction(e) {
   const b = e.target.closest("[data-action]");
   if (!b) return;
   e.preventDefault();
   const action = b.dataset.action,
     c = t();
-  if (action === "onboard-next") {
+  if (action === "open-mixer") {
+    mixerSheet.innerHTML = mixerView();
+    mixerSheet.showModal();
+  } else if (action === "close-mixer") {
+    mixerSheet.close();
+    document.querySelector(".mixer-fab")?.focus();
+  } else if (action === "sheet-sound") {
+    const i=Number(b.dataset.index), enabled=!audio.active[i];
+    personalizeMix();
+    const pending=audio.setChannel(i,enabled,{preservePause:true});
+    b.setAttribute('aria-checked',String(enabled));
+    state.mixEnabled=[...audio.active]; save();
+    try { await pending; } catch { toast(c.audioError); }
+    audio.apply();
+    state.mixEnabled=[...audio.active];save();
+    b.setAttribute('aria-checked',String(audio.active[i]));
+  } else if (action === "onboard-next") {
     onboarding++;
     render(true);
   } else if (action === "onboard-back") {
@@ -305,15 +356,18 @@ app.addEventListener("click", async (e) => {
       action === "object"
         ? objectSounds[Number(b.dataset.index)]
         : Number(b.dataset.index);
+    personalizeMix();
     const enabled = !audio.active[i];
     if (audio.fading) cancelVoice();
     const pending = audio.setChannel(i, enabled);
+    state.mixEnabled=[...audio.active];save();
     render();
     try {
       await pending;
     } catch {
       toast(c.audioError);
     }
+    state.mixEnabled=[...audio.active];save();
     render();
   } else if (action === "stop") {
     endAudio();
@@ -412,7 +466,9 @@ app.addEventListener("click", async (e) => {
     audio.apply();
     render();
   }
-});
+}
+app.addEventListener("click", handleAction);
+mixerSheet.addEventListener("click", handleAction);
 function restoreSession() {
   session.paused = session.wasPaused;
   render();
@@ -451,16 +507,20 @@ app.addEventListener("pointerup", (e) => {
 app.addEventListener("pointercancel", () => {
   fogPointer = null;
 });
-app.addEventListener("input", (e) => {
+function onVolume(e) {
   if (e.target.matches("[data-volume]")) {
     const i = Number(e.target.dataset.volume);
+    personalizeMix();
     state.mix[i] = Number(e.target.value) / 100;
     audio.volume[i] = state.mix[i];
     audio.apply();
-    document.querySelector(`#volume-${i}`).textContent = `${e.target.value}%`;
+    document.querySelectorAll?.(`[data-output="${i}"]`).forEach(out=>out.textContent=`${e.target.value}%`);
+    document.querySelectorAll?.(`[data-volume="${i}"]`).forEach(input=>{if(input!==e.target) input.value=e.target.value;});
     save();
   }
-});
+}
+app.addEventListener("input", onVolume);
+mixerSheet.addEventListener("input", onVolume);
 app.addEventListener("change", (e) => {
   if (e.target.id === "language") {
     state.lang = e.target.value;
@@ -497,18 +557,21 @@ setInterval(() => {
     const changed = phase !== session.phase || stage !== session.stage;
     if (phase === "ambience") {
       cancelVoice();
-      state = complete(state);
+      const before = state.unlocked;
+      state = complete(state, new Date(Date.now()), session.chapter);
+      lastUnlocked = state.unlocked.find(i=>!before.includes(i)) ?? lastUnlocked;
       save();
-      audio.transitionBedtime([.38, 0, .14, 0], 2);
+      if (!state.customMix) audio.transitionBedtime([.38, 0, .14, 0], 2);
       startSleep(Math.max(0, SESSION_SECONDS - session.elapsed));
     } else {
-      if (phase === "drifting" && session.phase !== phase) {
+      if (phase === "drifting" && session.phase !== phase && !state.customMix) {
         session.driftFrom = [...audio.sessionLevels];
-        audio.transitionBedtime([.38, 0, .14, 0], Math.max(0, 720 - session.elapsed));
+        audio.transitionBedtime([.38, 0, .14, 0], Math.max(0, GUIDED_END - session.elapsed));
       }
       session.phase = phase;
       session.stage = stage;
       const spoke = narrate();
+      if (phase === "prelude") updateBreath();
       if (changed) render();
       else if (spoke) {
         const text = document.querySelector('.story-text');
@@ -525,6 +588,7 @@ setInterval(() => {
     const left = remaining(sleep.deadline);
     if (left <= 0) {
       sleep.finished = true;
+      mixerSheet.close?.();
       endAudio();
       render();
     } else document.querySelector("#sleep-time").textContent = clock(left);
@@ -537,7 +601,7 @@ setInterval(() => {
 document.addEventListener("visibilitychange", () => {
   document.documentElement.classList.toggle('page-hidden', document.hidden);
   save();
-  if (document.hidden && screen === "session" && session.elapsed < 420 && !session.paused) {
+  if (document.hidden && screen === "session" && session.elapsed < DRIFT_START && !session.paused) {
     session.paused = true;
     audio.paused = true;
     audio.apply();

@@ -1,13 +1,25 @@
 import { VOICE_CUES } from './voice-cues.js';
 
-export const SESSION_SECONDS = 20 * 60;
+export const PRELUDE_SECONDS = 120;
+export const SESSION_SECONDS = 22 * 60;
+export const DRIFT_START = 540, GUIDED_END = 840;
+export function breathAt(seconds) {
+  const cycle = Math.max(0, seconds) % 12;
+  const phase = Math.floor(cycle / 4);
+  const progress = cycle % 4 / 4;
+  return {phase, remaining: Math.ceil(4-cycle%4), scale: phase === 0 ? .85 + .27*progress : phase === 1 ? 1.12 : 1.12-.27*progress};
+}
 export function phaseAt(seconds) {
+  if (seconds < 120) return 'prelude';
+  seconds -= PRELUDE_SECONDS;
   if (seconds < 180) return 'breathing';
   if (seconds < 420) return 'story';
   if (seconds < 720) return 'drifting';
   return 'ambience';
 }
 export function stageAt(seconds) {
+  if(seconds < PRELUDE_SECONDS) return -1;
+  seconds -= PRELUDE_SECONDS;
   return seconds < 90 ? 0 : seconds < 180 ? 1 : seconds < 420 ? 2 : 3;
 }
 export function buildSessionPlan(lang, chapter) {
@@ -30,7 +42,7 @@ export function buildSessionPlan(lang, chapter) {
   const short=bedtime.sentences.map((s,index)=>({s,index})).filter(x=>x.s.duration<=6).slice(-5);
   if(short.length!==5) throw new Error('Five short bedtime phrases required');
   short.forEach(({index},i)=>cues.push(phrase(bedtime,index,420+i*60,.5-i*.08,true)));
-  return cues.sort((a,b)=>a.at-b.at);
+  return cues.map(c=>({...c,at:c.at+PRELUDE_SECONDS})).sort((a,b)=>a.at-b.at);
 }
 
 // A delayed background tick skips expired cues; it never plays a queue of missed speech.

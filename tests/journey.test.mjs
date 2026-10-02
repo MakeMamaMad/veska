@@ -126,6 +126,10 @@ test("full app journey: pause, early exit, four unlocks, persistence and timer e
   assert.equal(saved().level, 1);
   for (let level = 2; level <= 5; level++) {
     await click("start");
+    advance(119);
+    assert.match(app.innerHTML, /phase-prelude/);
+    advance(1);
+    assert.match(app.innerHTML, /phase-breathing/);
     advance(90);
     assert.match(app.innerHTML, /Зажечь фонарь/);
     await click("light");
@@ -146,8 +150,9 @@ test("full app journey: pause, early exit, four unlocks, persistence and timer e
     advance(1);
     assert.match(app.innerHTML, /Звуки плавно затихли/);
     await click("sleep-exit");
+    wall += 86400000;
   }
-  assert.equal(saved().dates.length, 1);
+  assert.equal(saved().dates.length, 4);
   assert.ok(saved().seconds >= 730);
   await click("tab", { tab: "sounds" });
   await click("sound", { index: "0" });

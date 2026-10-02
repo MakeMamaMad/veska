@@ -1,5 +1,5 @@
 import { seamlessLoop } from "./loop-buffer.js";
-export const AMBIENCE = ["rain", "fire", "forest", "wind"].map(
+export const AMBIENCE = ["rain", "fire", "forest", "wind-owls"].map(
   (name) => new URL(`../assets/audio/${name}.mp3`, import.meta.url).href,
 );
 export const interfaceClickUrl = new URL(
@@ -25,7 +25,7 @@ export class Soundscape {
     this.sessionMode = false;
     this.sessionLevels = [0,0,0,0];
   }
-  async setChannel(index, enabled) {
+  async setChannel(index, enabled, {preservePause = false} = {}) {
     if (!Number.isInteger(index) || index < 0 || index >= AMBIENCE.length)
       return;
     if (enabled && this.fading) this.stop();
@@ -36,7 +36,7 @@ export class Soundscape {
       this.apply();
       return;
     }
-    this.paused = false;
+    if (!preservePause) this.paused = false;
     try {
       await this.init([index]);
       if (revision !== this.revision || request !== this.channelRevision[index])

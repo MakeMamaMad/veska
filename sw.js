@@ -1,4 +1,4 @@
-const CACHE = "veska-v5-seamless-scenes";
+const CACHE = "veska-v6-growing-village";
 const ASSETS = [
   "./",
   "./index.html",

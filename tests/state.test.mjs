@@ -41,10 +41,10 @@ test("normalization constrains saved data", () => {
 test("each completed session unlocks exactly one object and caps at four", () => {
   let s = fresh();
   for (let i = 0; i < 8; i++) {
-    s = complete(s, new Date(2026, 9, 2));
+    s = complete(s, new Date(2026, 9, 2+i));
     assert.equal(s.level, Math.min(i + 2, 5));
   }
-  assert.deepEqual(s.dates, ["2026-10-02"]);
+  assert.equal(s.dates.length, 8);
 });
 test("local-day streak handles yesterday, gaps and month boundaries", () => {
   const now = new Date(2026, 9, 2, 0, 1);
@@ -72,4 +72,19 @@ test("serialized state restores preferences and progress", () => {
     voice: false,
   };
   assert.deepEqual(load({ getItem: () => JSON.stringify(saved) }), saved);
+});
+
+test('daily construction order is cottage, bonfire, mill, barn with no repeat reward',()=>{
+ let s=fresh();
+ for(const [day,obj] of [0,3,1,2].entries()) {
+  const now=new Date(2026,9,day+2);s=complete(s,now);
+  assert.equal(s.unlocked.at(-1),obj);assert.equal(s.currentDay,day+2);
+  assert.deepEqual(complete(s,now).unlocked,s.unlocked);
+ }
+});
+test('legacy migration preserves mill and barn rather than replacing them',()=>{
+ assert.deepEqual(normalize({level:4}).unlocked,[0,1,2]);
+ assert.equal(normalize({level:4}).currentDay,4);
+ assert.deepEqual(complete(normalize({level:4})).unlocked,[0,1,2,3]);
+ assert.deepEqual(normalize({currentDay:3}).unlocked,[0,3]);
 });
