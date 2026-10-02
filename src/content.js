@@ -1,5 +1,8 @@
 export const copy = {
   ru: {
+    loadingAudio: "Загружаю запись…",
+    soundCredits: "Записи и авторы",
+    narrationPending: "История текстом и звуки природы · озвучка готовится",
     tag: "Твой цифровой хутор спокойствия",
     welcome: "Место, где можно выдохнуть.",
     intro:
@@ -79,7 +82,7 @@ export const copy = {
     settings: "Как тебе удобно",
     langLabel: "Язык приложения",
     voice: "Голос рассказчика",
-    voiceNote: "Системный голос устройства",
+    voiceNote: "Озвучка · elevenlabs.io",
     subscription: "Подписка",
     soon: "Появится позже",
     feedback: "Написать создателю",
@@ -114,12 +117,15 @@ export const copy = {
     privacy: "Без аккаунта. Без суеты.",
     return: "Назад",
     replay: "Слушать снова",
-    synthetic: "Звуковые пейзажи созданы синтезатором.",
+    synthetic: "Живые записи природы, мягко соединённые в петли.",
     sleepLimit:
       "На некоторых телефонах звук может остановиться при блокировке экрана.",
-    voiceUnavailable: "Озвучка не поддерживается этим браузером.",
+    voiceUnavailable: "Озвучка ElevenLabs ещё не добавлена.",
   },
   en: {
+    loadingAudio: "Loading recording…",
+    soundCredits: "Recordings and credits",
+    narrationPending: "Written story and nature sounds · narration coming soon",
     tag: "Your digital village of peace",
     welcome: "A place to breathe out.",
     intro:
@@ -199,7 +205,7 @@ export const copy = {
     settings: "Make yourself comfortable",
     langLabel: "App language",
     voice: "Story narrator",
-    voiceNote: "Your device’s system voice",
+    voiceNote: "Narration · elevenlabs.io",
     subscription: "Subscription",
     soon: "Coming later",
     feedback: "Contact the creator",
@@ -234,9 +240,9 @@ export const copy = {
     privacy: "No account. No hurry.",
     return: "Back",
     replay: "Listen again",
-    synthetic: "Soundscapes are created with a synthesizer.",
+    synthetic: "Real nature recordings with gently blended loops.",
     sleepLimit: "Some phones may stop audio when the screen is locked.",
-    voiceUnavailable: "Narration is not supported by this browser.",
+    voiceUnavailable: "ElevenLabs narration has not been added yet.",
   },
 };
 export const stories = {

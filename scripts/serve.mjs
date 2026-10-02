@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 import { resolve, extname, sep } from "node:path";
 const root = resolve(".");
 const mime = {
+  ".wav": "audio/wav",
+  ".mp3": "audio/mpeg",
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",

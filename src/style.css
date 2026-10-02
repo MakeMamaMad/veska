@@ -1579,3 +1579,36 @@ dialog p {
     scroll-behavior: auto !important;
   }
 }
+
+.narration-note {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 16px;
+  line-height: 1.5;
+}
+.switch:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.footnote a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.sounds-page > .footnote {
+  display: block;
+}
+.credits {
+  padding-bottom: 60px;
+  max-width: 900px;
+}
+.credits p {
+  margin: 20px 0;
+}
+.credits li {
+  margin: 20px 0;
+  line-height: 1.7;
+}
+.credits a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

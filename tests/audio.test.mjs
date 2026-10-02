@@ -25,6 +25,7 @@ function engine() {
   a.master = { gain: parameter() };
   a.channels = Array.from({ length: 4 }, () => ({
     gain: { gain: parameter() },
+    ready: true,
   }));
   return a;
 }
@@ -37,6 +38,37 @@ test("mixer keeps rain 70% and fire 30% independent", () => {
   assert.equal(a.channels[1].gain.gain.events[0][1], 0.3);
   assert.equal(a.channels[2].gain.gain.events[0][1], 0);
   assert.equal(a.playing, true);
+});
+test("recordings load lazily, deduplicate requests and retry failures", async () => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0,
+    fail = true;
+  globalThis.fetch = async () => {
+    calls++;
+    if (fail) return { ok: false, status: 503 };
+    return { ok: true, arrayBuffer: async () => new ArrayBuffer(4) };
+  };
+  const a = engine();
+  a.ctx.resume = async () => {};
+  a.ctx.decodeAudioData = async () => ({ duration: 10 });
+  a.ctx.createBufferSource = () => ({ connect() {}, start() {} });
+  a.channels.forEach((c) => {
+    c.ready = false;
+    c.pending = null;
+  });
+  try {
+    await assert.rejects(a.init([0]), /Recording unavailable/);
+    assert.equal(a.channels[0].ready, false);
+    fail = false;
+    await Promise.all([a.init([0]), a.init([0])]);
+    assert.equal(calls, 2);
+    assert.equal(a.channels[0].ready, true);
+    assert.equal(a.channels[1].ready, false);
+    await a.init([0]);
+    assert.equal(calls, 2);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 test("paused and zero-volume channels do not count as listening", () => {
   const a = engine();

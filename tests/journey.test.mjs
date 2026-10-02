@@ -39,6 +39,10 @@ test("full app journey: pause, early exit, four unlocks, persistence and timer e
   };
   globalThis.setTimeout = () => 0;
   globalThis.clearTimeout = () => {};
+  globalThis.fetch = async () => ({
+    ok: true,
+    arrayBuffer: async () => new ArrayBuffer(4),
+  });
   Date.now = () => wall;
   const param = () => ({
     value: 0,
@@ -78,6 +82,9 @@ test("full app journey: pause, early exit, four unlocks, persistence and timer e
     async resume() {
       this.state = "running";
     }
+    async decodeAudioData() {
+      return { duration: 42.5 };
+    }
   }
   globalThis.window = {
     AudioContext: FakeAudio,
@@ -104,6 +111,8 @@ test("full app journey: pause, early exit, four unlocks, persistence and timer e
   await click("finish-onboarding");
   assert.equal(saved().level, 1);
   assert.equal(saved().onboarded, true);
+  // This journey exercises the supported text-only mode; narrator timing is tested separately.
+  await click("voice");
   await click("start");
   advance(10);
   await click("pause");

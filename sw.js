@@ -1,4 +1,4 @@
-const CACHE = "veska-v1-20261002b";
+const CACHE = "veska-v2-recorded-audio";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,14 +7,21 @@ const ASSETS = [
   "./src/app.js",
   "./src/state.js",
   "./src/audio.js",
+  "./src/narration.js",
+  "./audio-credits.html",
   "./src/art.js",
   "./src/content.js",
   "./src/style.css",
 ];
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE)
-      .then((cache) => cache.addAll(ASSETS.map(url => new Request(url, {cache: "reload"}))))
+    caches
+      .open(CACHE)
+      .then((cache) =>
+        cache.addAll(
+          ASSETS.map((url) => new Request(url, { cache: "reload" })),
+        ),
+      )
       .then(() => self.skipWaiting()),
   );
 });
@@ -43,7 +50,9 @@ self.addEventListener("fetch", (event) => {
       .then((response) => {
         if (response.ok) {
           const clone = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(event.request, clone));
+          event.waitUntil(
+            caches.open(CACHE).then((cache) => cache.put(event.request, clone)),
+          );
         }
         return response;
       })
@@ -60,4 +69,3 @@ self.addEventListener("fetch", (event) => {
       ),
   );
 });
-
