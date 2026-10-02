@@ -1,4 +1,4 @@
-const CACHE = "veska-v8-day2-voice-progress";
+const CACHE = "veska-v12-autumn";
 const ASSETS = [
   "./",
   "./index.html",
@@ -10,6 +10,9 @@ const ASSETS = [
   "./src/loop-buffer.js",
   "./src/narration.js",
   "./src/session-plan.js",
+  "./src/media-session.js",
+  "./src/tuning.js",
+  "./src/text-cues.js",
   "./src/voice-cues.js",
   "./audio-credits.html",
   "./src/art.js",

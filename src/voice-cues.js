@@ -39,38 +39,38 @@ export const VOICE_CUES = {
         ]
       },
       {
-        "url": "../assets/narration/ru-1-2-warm.mp3",
-        "duration": 22.831,
+        "url": "../assets/narration/ru-1-2-alisa.mp3",
+        "duration": 16.72,
         "sentences": [
           {
             "text": "Над землёй поднимается лёгкий туман.",
             "offset": 0,
-            "duration": 3.318
+            "duration": 2.72
           },
           {
-            "text": "Среди деревьев виднеется маленькая хата.",
-            "offset": 3.318,
-            "duration": 4.283
+            "text": "Среди деревьев виднеется маленький дом.",
+            "offset": 2.72,
+            "duration": 3.15
           },
           {
             "text": "В ладони у тебя фонарь.",
-            "offset": 7.601,
-            "duration": 2.47
+            "offset": 5.87,
+            "duration": 1.865
           },
           {
             "text": "Когда захочется, коснись света.",
-            "offset": 10.072,
-            "duration": 3.374
+            "offset": 7.735,
+            "duration": 2.415
           },
           {
             "text": "Тёплый круг на тропинке станет твоим спутником.",
-            "offset": 13.445,
-            "duration": 4.722
+            "offset": 10.15,
+            "duration": 3.575
           },
           {
             "text": "Здесь достаточно одного небольшого шага.",
-            "offset": 18.168,
-            "duration": 4.663
+            "offset": 13.725,
+            "duration": 2.995
           }
         ]
       },
@@ -116,79 +116,78 @@ export const VOICE_CUES = {
         ]
       },
       {
-        "url": "../assets/narration/ru-1-4-warm.mp3",
-        "duration": 21.577,
+        "url": "../assets/narration/ru-1-4-alisa.mp3",
+        "duration": 16.33,
         "sentences": [
           {
-            "text": "В окнах твоей хаты загорается свет.",
+            "text": "В окнах твоего дома загорается свет.",
             "offset": 0,
-            "duration": 3.464
+            "duration": 2.585
           },
           {
             "text": "Он останется здесь и завтра.",
-            "offset": 3.464,
-            "duration": 2.776
+            "offset": 2.585,
+            "duration": 2.115
           },
           {
             "text": "Ты можешь возвращаться сюда столько раз, сколько захочешь.",
-            "offset": 6.24,
-            "duration": 5.517
+            "offset": 4.7,
+            "duration": 3.92
           },
           {
             "text": "Устройся поудобнее.",
-            "offset": 11.758,
-            "duration": 2.197
+            "offset": 8.62,
+            "duration": 1.405
           },
           {
             "text": "Прислушайся к дождю.",
-            "offset": 13.954,
-            "duration": 2.153
+            "offset": 10.025,
+            "duration": 1.56
           },
           {
             "text": "Этот вечер уже принадлежит тебе.",
-            "offset": 16.107,
-            "duration": 3.006
+            "offset": 11.585,
+            "duration": 2.805
           },
           {
             "text": "Всё остальное подождёт.",
-            "offset": 19.113,
-            "duration": 2.464
+            "offset": 14.39,
+            "duration": 1.94
           }
         ]
       }
     ],
     [
       {
-        "url": "../assets/narration/ru-day2-mill.mp3",
-        "duration": 15.269637188208616,
+        "url": "../assets/narration/ru-2-1-alisa.mp3",
+        "duration": 15.2,
         "sentences": [
           {
             "text": "Вечерняя тропинка ведёт тебя к полю.",
             "offset": 0,
-            "duration": 2.563
+            "duration": 2.725
           },
           {
             "text": "Воздух здесь пахнет травой.",
-            "offset": 2.563,
-            "duration": 2.053
+            "offset": 2.725,
+            "duration": 2.185
           },
           {
-            "text": "Вдалеке стоит старый млын.",
-            "offset": 4.616,
-            "duration": 2.407
+            "text": "Вдалеке стоит старая мельница.",
+            "offset": 4.91,
+            "duration": 2.545
           },
           {
-            "text": "Его крылья неподвижны.",
-            "offset": 7.023,
-            "duration": 1.745
+            "text": "Её крылья неподвижны.",
+            "offset": 7.455,
+            "duration": 1.82
           },
           {
             "text": "Ты идёшь медленно и замечаешь, как с каждым шагом дыхание становится спокойнее.",
-            "offset": 8.768,
-            "duration": 6.501
+            "offset": 9.275,
+            "duration": 5.925
           }
-        ],
-        "offset": 0
+        ]
       },
       {
         "url": "../assets/narration/ru-day2-mill.mp3",
@@ -223,83 +222,81 @@ export const VOICE_CUES = {
         "offset": 15.269637
       },
       {
-        "duration": 25.991836734693877,
+        "url": "../assets/narration/ru-2-3-alisa.mp3",
+        "duration": 22.41,
         "sentences": [
           {
             "text": "Ты останавливаешься возле старой мельницы.",
-            "offset": 30.565397,
-            "duration": 3.1309975000000003
+            "offset": 0,
+            "duration": 2.815
           },
           {
             "text": "Мельник оставляет фонарь у двери и желает тебе тихой ночи.",
-            "offset": 33.696394,
-            "duration": 4.7673925
+            "offset": 2.815,
+            "duration": 4.315
           },
           {
             "text": "Лёгкий ветер начинает медленно вращать деревянные крылья.",
-            "offset": 38.463787,
-            "duration": 4.654659999999999
+            "offset": 7.13,
+            "duration": 4.15
           },
           {
             "text": "Шестерёнки отвечают мягким, неторопливым скрипом.",
-            "offset": 43.118447,
-            "duration": 4.283594000000001
+            "offset": 11.28,
+            "duration": 3.69
           },
           {
             "text": "Сегодня больше ничего не нужно заканчивать.",
-            "offset": 47.402041,
-            "duration": 3.303435499999999
+            "offset": 14.97,
+            "duration": 2.965
           },
           {
             "text": "Пусть ветер делает свою работу.",
-            "offset": 50.705476,
-            "duration": 2.9407710000000016
+            "offset": 17.935,
+            "duration": 2.085
           },
           {
             "text": "А ты можешь просто отдохнуть.",
-            "offset": 53.646247,
-            "duration": 2.910986234693876
+            "offset": 20.02,
+            "duration": 2.39
           }
-        ],
-        "url": "../assets/narration/ru-day2-mill.mp3",
-        "offset": 30.565397
+        ]
       },
       {
-        "url": "../assets/narration/ru-day2-mill.mp3",
-        "duration": 18.534943310657596,
+        "url": "../assets/narration/ru-2-4-alisa.mp3",
+        "duration": 15.62,
         "sentences": [
           {
-            "text": "Млын ожил.",
-            "offset": 56.557234,
-            "duration": 2.286
+            "text": "Мельница ожила.",
+            "offset": 0,
+            "duration": 1.605
           },
           {
-            "text": "Его спокойное движение теперь часть твоего хутора.",
-            "offset": 58.843234,
-            "duration": 3.351
+            "text": "Её спокойное движение теперь часть твоего хутора.",
+            "offset": 1.605,
+            "duration": 3.6
           },
           {
             "text": "Ветер шепчет в траве, а небо становится глубже.",
-            "offset": 62.194234,
-            "duration": 3.944
+            "offset": 5.205,
+            "duration": 3.85
           },
           {
             "text": "Позволь мыслям проходить мимо.",
-            "offset": 66.138234,
-            "duration": 2.623
+            "offset": 9.055,
+            "duration": 2.155
           },
           {
             "text": "Здесь можно отдохнуть.",
-            "offset": 68.762234,
-            "duration": 2.964
+            "offset": 11.21,
+            "duration": 1.985
           },
           {
             "text": "Здесь достаточно просто быть.",
-            "offset": 71.726234,
-            "duration": 3.366
+            "offset": 13.195,
+            "duration": 2.425
           }
-        ],
-        "offset": 56.557234
+        ]
       }
     ],
     [
@@ -335,28 +332,28 @@ export const VOICE_CUES = {
         ]
       },
       {
-        "url": "../assets/narration/ru-3-2-warm.mp3",
-        "duration": 16.184,
+        "url": "../assets/narration/ru-3-2-alisa.mp3",
+        "duration": 14.89,
         "sentences": [
           {
-            "text": "Между деревьями стоит свiран.",
+            "text": "Между деревьями стоит амбар.",
             "offset": 0,
-            "duration": 3.329
+            "duration": 2.315
           },
           {
             "text": "В нём хранятся маленькие сокровища лета.",
-            "offset": 3.329,
-            "duration": 2.85
+            "offset": 2.315,
+            "duration": 3.14
           },
           {
             "text": "Можно зажечь фонарь и рассмотреть потемневшее дерево, узор на двери, сухой лист у порога.",
-            "offset": 6.179,
-            "duration": 6.391
+            "offset": 5.455,
+            "duration": 6.77
           },
           {
             "text": "У каждой мелочи есть своё место.",
-            "offset": 12.57,
-            "duration": 3.614
+            "offset": 12.225,
+            "duration": 2.665
           }
         ]
       },
@@ -392,61 +389,61 @@ export const VOICE_CUES = {
         ]
       },
       {
-        "url": "../assets/narration/ru-3-4-warm.mp3",
-        "duration": 15.818,
+        "url": "../assets/narration/ru-3-4-alisa.mp3",
+        "duration": 13.92,
         "sentences": [
           {
-            "text": "Свiран теперь часть твоего хутора.",
+            "text": "Амбар теперь часть твоего хутора.",
             "offset": 0,
-            "duration": 3.397
+            "duration": 2.485
           },
           {
             "text": "За его дверью всё спокойно.",
-            "offset": 3.397,
-            "duration": 2.071
+            "offset": 2.485,
+            "duration": 2.055
           },
           {
             "text": "Ты выходишь на тропинку, и лес обнимает тебя тишиной.",
-            "offset": 5.468,
-            "duration": 3.824
+            "offset": 4.54,
+            "duration": 4.275
           },
           {
             "text": "Почувствуй, как тело отдыхает.",
-            "offset": 9.293,
-            "duration": 3.095
+            "offset": 8.815,
+            "duration": 2.4
           },
           {
             "text": "Сегодня ты уже сделал достаточно.",
-            "offset": 12.388,
-            "duration": 3.43
+            "offset": 11.215,
+            "duration": 2.705
           }
         ]
       }
     ],
     [
       {
-        "url": "../assets/narration/ru-4-1-warm.mp3",
-        "duration": 14.199,
+        "url": "../assets/narration/ru-4-1-alisa.mp3",
+        "duration": 13.69,
         "sentences": [
           {
             "text": "Вечер собрал твой хутор под звёздным небом.",
             "offset": 0,
-            "duration": 2.796
+            "duration": 3.06
           },
           {
-            "text": "Светится хата, медленно вращается млын, отдыхает свiран.",
-            "offset": 2.796,
-            "duration": 4.532
+            "text": "Светится дом, медленно вращается мельница, отдыхает амбар.",
+            "offset": 3.06,
+            "duration": 4.93
           },
           {
             "text": "На поляне есть место для небольшого костра.",
-            "offset": 7.328,
-            "duration": 3.212
+            "offset": 7.99,
+            "duration": 3.26
           },
           {
             "text": "Ты приносишь несколько сухих веток.",
-            "offset": 10.54,
-            "duration": 3.658
+            "offset": 11.25,
+            "duration": 2.44
           }
         ]
       },

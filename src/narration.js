@@ -1,17 +1,10 @@
-import {day2VoiceUrls} from './day2.js';
+import { VOICE_CUES } from './voice-cues.js';
 // Only local, reviewed recordings belong here. Never put API credentials in the app.
 // Each completed chapter must contain four URLs, one per story paragraph.
+// The recordings come straight from the measured cue sheet, so a re-voiced paragraph
+// only needs its entry in voice-cues.js updated.
 export const RECORDINGS = Object.fromEntries(
-  ["ru", "en"].map((lang) => [
-    lang,
-    Array.from({ length: 4 }, (_, chapter) =>
-      Array.from(
-        { length: 4 },
-        (_, stage) =>
-          chapter === 1 ? day2VoiceUrls[lang] : `../assets/narration/${lang}-${chapter + 1}-${stage + 1}-warm.mp3`,
-      ),
-    ),
-  ]),
+  Object.entries(VOICE_CUES).map(([lang, chapters]) => [lang, chapters.map((parts) => parts.map((part) => part.url))]),
 );
 export const hasNarration = (lang, chapter) =>
   RECORDINGS[lang]?.[chapter]?.length === 4;

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {breathAt,buildSessionPlan,phaseAt,stageAt,takeDueCue} from '../src/session-plan.js';
+import {breathAt,buildSessionPlan,phaseAt,stageAt,takeDueCue,TIMELINES,earnAt} from '../src/session-plan.js';
 import {VOICE_CUES} from '../src/voice-cues.js';
 test('two-minute prelude then four phases, with no speech after fourteen minutes',()=>{
   assert.deepEqual([0,120,299,300,539,540,839,840,1320].map(phaseAt),['prelude','breathing','breathing','story','story','drifting','drifting','ambience','ambience']);
@@ -28,4 +28,33 @@ test('breathing completes ten 4-4-4 cycles without narration',()=>{
  assert.deepEqual([0,4,8,12,116].map(s=>breathAt(s).phase),[0,1,2,0,2]);
  assert.equal(breathAt(4).scale,1.12);assert.equal(breathAt(0).scale,.85);
  for(const lang of ['ru','en'])assert.equal(takeDueCue(buildSessionPlan(lang,0),0,119).cue,null);
+});
+
+test('short evening: story at once, one bedtime phrase, ten minutes in all',()=>{
+ const tl=TIMELINES.short;
+ assert.deepEqual([0,89,90,180,419,420,479,480].map(x=>phaseAt(x,tl)),['breathing','breathing','breathing','story','story','drifting','drifting','ambience']);
+ assert.equal(stageAt(0,tl),0);
+ assert.equal(earnAt(tl),420);
+ assert.equal(earnAt(),540);
+ for(const lang of ['ru','en']) for(let chapter=0;chapter<4;chapter++){
+  const plan=buildSessionPlan(lang,chapter,tl);
+  assert.equal(plan[0].at,0);
+  assert.equal(takeDueCue(plan,0,0,tl).cue.at,0);
+  assert.deepEqual(plan.filter(c=>c.soft).map(c=>c.at),[420]);
+  assert.ok(plan.every(c=>c.at+c.duration<480));
+ }
+});
+test('autumn stories without recordings play as text within the story phase', async () => {
+  const { textCues } = await import('../src/text-cues.js');
+  for (const lang of ['ru', 'en']) for (let chapter = 4; chapter < 9; chapter++) {
+    const parts = textCues(lang, chapter);
+    assert.equal(parts.length, 4);
+    assert.ok(parts.every((p) => p.url === null && p.sentences.length >= 3));
+    const plan = buildSessionPlan(lang, chapter);
+    const story = plan.filter((c) => phaseAt(c.at) === 'story');
+    assert.ok(story.length >= 8);
+    assert.ok(story.every((c) => c.url === null && c.at + c.duration < 540));
+    // breathing reminders and bedtime phrases stay recorded
+    assert.ok(plan.filter((c) => c.soft).every((c) => typeof c.url === 'string'));
+  }
 });

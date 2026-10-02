@@ -34,7 +34,7 @@ test("full app journey: pause, early exit, four unlocks, persistence and timer e
   };
   let tick,
     context,
-    wall = 1800000000000;
+    wall = new Date(2027, 0, 15, 21, 0).getTime(); // a local evening, in any time zone
   globalThis.setInterval = (fn) => {
     tick = fn;
   };
@@ -115,6 +115,7 @@ test("full app journey: pause, early exit, four unlocks, persistence and timer e
   // This journey exercises the supported text-only mode; narrator timing is tested separately.
   await click("voice");
   await click("start");
+  assert.match(app.innerHTML, /Сразу к истории/);
   advance(10);
   await click("pause");
   advance(200);
@@ -140,17 +141,23 @@ test("full app journey: pause, early exit, four unlocks, persistence and timer e
     advance(240);
     assert.match(app.innerHTML, /phase-drifting/);
     assert.doesNotMatch(app.innerHTML, /data-action="detail"|data-action="fog"|data-action="light"/);
-    advance(299);
+    assert.ok(saved().pending, "evening counted once the story is over");
     assert.equal(saved().level, level - 1);
+    advance(299);
     advance(1);
-    assert.equal(saved().level, level);
+    assert.equal(saved().level, level - 1, "the building waits for the morning");
     assert.match(app.innerHTML, /sleep-screen/);
+    assert.match(app.innerHTML, /Вечер засчитан/);
     advance(479);
     assert.doesNotMatch(app.innerHTML, /Звуки плавно затихли/);
     advance(1);
     assert.match(app.innerHTML, /Звуки плавно затихли/);
     await click("sleep-exit");
     wall += 86400000;
+    await click("tab", { tab: "village" });
+    assert.match(app.innerHTML, /morning-screen/);
+    await click("morning-go");
+    assert.equal(saved().level, level);
   }
   assert.equal(saved().dates.length, 4);
   assert.ok(saved().seconds >= 730);
