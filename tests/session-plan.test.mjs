@@ -44,3 +44,17 @@ test('short evening: story at once, one bedtime phrase, ten minutes in all',()=>
   assert.ok(plan.every(c=>c.at+c.duration<480));
  }
 });
+test('autumn stories without recordings play as text within the story phase', async () => {
+  const { textCues } = await import('../src/text-cues.js');
+  for (const lang of ['ru', 'en']) for (let chapter = 4; chapter < 9; chapter++) {
+    const parts = textCues(lang, chapter);
+    assert.equal(parts.length, 4);
+    assert.ok(parts.every((p) => p.url === null && p.sentences.length >= 3));
+    const plan = buildSessionPlan(lang, chapter);
+    const story = plan.filter((c) => phaseAt(c.at) === 'story');
+    assert.ok(story.length >= 8);
+    assert.ok(story.every((c) => c.url === null && c.at + c.duration < 540));
+    // breathing reminders and bedtime phrases stay recorded
+    assert.ok(plan.filter((c) => c.soft).every((c) => typeof c.url === 'string'));
+  }
+});

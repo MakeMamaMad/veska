@@ -1,4 +1,5 @@
 import { VOICE_CUES } from './voice-cues.js';
+import { textCues } from './text-cues.js';
 
 // Two session lengths share the same story recordings; only the quiet parts change.
 // prelude: guided breathing without voice; intro: first two voiced parts with fog / lantern;
@@ -38,7 +39,7 @@ export function stageAt(seconds, tl) {
   return seconds < tl.intro / 2 ? 0 : seconds < tl.intro ? 1 : seconds < tl.intro + tl.story ? 2 : 3;
 }
 export function buildSessionPlan(lang, chapter, tl = TIMELINES.full) {
-  const parts = VOICE_CUES[lang][chapter], common = VOICE_CUES[lang][0];
+  const parts = VOICE_CUES[lang][chapter] ?? textCues(lang, chapter), common = VOICE_CUES[lang][0];
   const full = (part,at) => ({url:part.url,offset:part.offset ?? 0,duration:part.duration,text:part.sentences.map(s=>s.text).join(' '),at,gain:.9,soft:false});
   const phrase = (part,index,at,gain=.9,soft=false) => ({url:part.url,...part.sentences[index],at,gain,soft});
   const cues=[full(parts[0],0),full(parts[1],tl.intro/2)];

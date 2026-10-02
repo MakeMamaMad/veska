@@ -36,19 +36,25 @@ test("normalization constrains saved data", () => {
     mix: [3, -2, NaN, 0.6],
     dates: ["bad", "2026-10-01", "2026-10-01"],
   });
-  assert.equal(s.level, 5);
+  assert.equal(s.level, 10);
   assert.equal(s.lang, "ru");
   assert.equal(s.seconds, 0);
   assert.deepEqual(s.mix, [1, 0, 0.4, 0.6, .25, .15]);
   assert.deepEqual(s.dates, ["2026-10-01"]);
 });
-test("each completed session unlocks exactly one object and caps at four", () => {
+test("each completed session unlocks exactly one place and caps after the autumn season", () => {
   let s = fresh();
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 12; i++) {
     s = complete(s, new Date(2026, 9, 2+i));
-    assert.equal(s.level, Math.min(i + 2, 5));
+    assert.equal(s.level, Math.min(i + 2, 10));
+    assert.equal(s.unlocked.length, Math.min(i + 2, 9));
   }
-  assert.equal(s.dates.length, 8);
+  assert.equal(s.dates.length, 12);
+});
+test("players who finished the first four stories continue into autumn", () => {
+  const old = normalize({ currentDay: 5, unlocked: [0, 1, 2, 3] });
+  assert.equal(old.currentDay, 5);
+  assert.deepEqual(old.unlocked, [0, 1, 2, 3, 4]);
 });
 test("local-day streak handles yesterday, gaps and month boundaries", () => {
   const now = new Date(2026, 9, 2, 0, 1);

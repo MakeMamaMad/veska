@@ -1,6 +1,12 @@
 // Story order: the bonfire story already mentions the barn, so the barn comes before the bonfire.
-export const BUILD_ORDER = [0, 1, 2, 3];
-export const nextChapter = state => BUILD_ORDER[Math.min(3, state.currentDay - 1)];
+export const BUILD_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+export const PLACE_COUNT = BUILD_ORDER.length;
+// currentDay runs 1..FINAL_DAY; FINAL_DAY means every story has been heard.
+export const FINAL_DAY = PLACE_COUNT + 1;
+// Seasons group places for the progress row: first evenings, then autumn.
+export const SEASONS = [[0, 1, 2, 3], [4, 5, 6, 7, 8]];
+export const seasonOf = (day) => SEASONS.findIndex((places) => places.includes(BUILD_ORDER[Math.min(PLACE_COUNT, day) - 1]));
+export const nextChapter = state => BUILD_ORDER[Math.min(PLACE_COUNT - 1, state.currentDay - 1)];
 export const KEY = "veska.v1";
 export const fresh = () => ({
   version: 3,
@@ -36,13 +42,13 @@ export function normalize(raw) {
     ? raw.sound
     : s.sound;
   const day = Number(raw.currentDay ?? raw.level);
-  s.currentDay = Number.isFinite(day) ? Math.max(1, Math.min(5, Math.floor(day))) : 1;
+  s.currentDay = Number.isFinite(day) ? Math.max(1, Math.min(FINAL_DAY, Math.floor(day))) : 1;
   s.level = s.currentDay;
   const legacy = Array.isArray(raw.unlocked)
-    ? raw.unlocked.filter(i => Number.isInteger(i) && i >= 0 && i < 4)
-    : [0,1,2,3].slice(0, Math.max(0, (Number(raw.level) || 1)-1));
+    ? raw.unlocked.filter(i => Number.isInteger(i) && i >= 0 && i < PLACE_COUNT)
+    : [0,1,2,3].slice(0, Math.max(0, Math.min(5, Number(raw.level) || 1)-1));
   // Preserve all existing buildings while revealing the current day's location.
-  s.unlocked = [...new Set([...legacy, ...BUILD_ORDER.slice(0, Math.min(4, s.currentDay))])];
+  s.unlocked = [...new Set([...legacy, ...BUILD_ORDER.slice(0, Math.min(PLACE_COUNT, s.currentDay))])];
   s.lastBuildDate = /^\d{4}-\d{2}-\d{2}$/.test(raw.lastBuildDate || '') ? raw.lastBuildDate : null;
   s.customMix = raw.customMix === true;
   s.day2MixConfigured = raw.day2MixConfigured === true;
@@ -57,7 +63,7 @@ export function normalize(raw) {
     Number.isFinite(raw.mix?.[i]) ? Math.min(1, Math.max(0, raw.mix[i])) : v,
   );
   s.voice = raw.voice !== false;
-  if (raw.pending && [0, 1, 2, 3].includes(raw.pending.chapter) && Number.isFinite(raw.pending.at))
+  if (raw.pending && BUILD_ORDER.includes(raw.pending.chapter) && Number.isFinite(raw.pending.at))
     s.pending = { chapter: raw.pending.chapter, at: raw.pending.at };
   s.sleepLog = Array.isArray(raw.sleepLog)
     ? raw.sleepLog.filter((e) => /^\d{4}-\d{2}-\d{2}$/.test(e?.date || "") && [1, 2, 3].includes(e.mood)).map(({ date, mood }) => ({ date, mood })).slice(-120)
@@ -90,9 +96,9 @@ export function streak(dates, now = new Date()) {
 export function complete(state, now = new Date(), chapter = nextChapter(state)) {
   const today = dayKey(now);
   const unlocked = [...state.unlocked];
-  const earned = state.currentDay < 5 && chapter === nextChapter(state);
+  const earned = state.currentDay < FINAL_DAY && chapter === nextChapter(state);
   const currentDay = state.currentDay + (earned ? 1 : 0);
-  for (const i of BUILD_ORDER.slice(0, Math.min(4, currentDay))) if (!unlocked.includes(i)) unlocked.push(i);
+  for (const i of BUILD_ORDER.slice(0, Math.min(PLACE_COUNT, currentDay))) if (!unlocked.includes(i)) unlocked.push(i);
   return {
     ...state, unlocked, currentDay, level: currentDay,
     lastBuildDate: earned ? today : state.lastBuildDate,
@@ -112,7 +118,7 @@ export function clock(seconds) {
 // so falling asleep early is never punished and there is a reason to look in tomorrow.
 export function earn(state, now = new Date(), chapter = nextChapter(state)) {
   const dates = [...new Set([...state.dates, dayKey(now)])].sort();
-  const builds = !state.pending && state.currentDay < 5 && chapter === nextChapter(state);
+  const builds = !state.pending && state.currentDay < FINAL_DAY && chapter === nextChapter(state);
   return { ...state, dates, pending: builds ? { chapter, at: now.getTime() } : state.pending };
 }
 export const MORNING_HOURS = 4;
@@ -127,10 +133,10 @@ export function reveal(state) {
   if (!state.pending) return state;
   const { chapter, at } = state.pending;
   const base = { ...state, pending: null };
-  if (chapter !== nextChapter(state) || state.currentDay >= 5) return base;
+  if (chapter !== nextChapter(state) || state.currentDay >= FINAL_DAY) return base;
   const currentDay = state.currentDay + 1;
   const unlocked = [...state.unlocked];
-  for (const i of BUILD_ORDER.slice(0, Math.min(4, currentDay))) if (!unlocked.includes(i)) unlocked.push(i);
+  for (const i of BUILD_ORDER.slice(0, Math.min(PLACE_COUNT, currentDay))) if (!unlocked.includes(i)) unlocked.push(i);
   return { ...base, unlocked, currentDay, level: currentDay, lastBuildDate: dayKey(new Date(at)) };
 }
 export function logSleep(state, mood, now = new Date()) {

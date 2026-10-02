@@ -1904,3 +1904,19 @@ html:has(#mix-sheet[open]) { overflow:hidden; }
 /* ---- Tonight's tuning from the onboarding answer ---- */
 .tonight { display:flex; gap:8px; align-items:flex-start; margin:10px 0 0; font-size:.76rem; line-height:1.45; color:#b9c9a6; }
 .tonight svg { flex:none; width:14px; height:14px; margin-top:2px; color:var(--warm); }
+
+/* ---- Map hotspots follow the scene: same 1000×640 frame, cropped like the SVG (slice) ---- */
+.village-map { container-type: size; }
+.map-hotspots { position:absolute; left:50%; top:50%; width:100%; aspect-ratio:1000/640; transform:translate(-50%,-50%); pointer-events:none; z-index:3; }
+@supports (width: 1cqh) { .map-hotspots { width:max(100cqw, 156.25cqh); } }
+.map-hotspots .map-object { pointer-events:auto; transform:translate(-50%,-50%); white-space:nowrap; }
+/* With more than four places, show compact dots; the name appears while its sound plays. */
+.map-hotspots.compact .map-object { padding:0; width:34px; height:34px; justify-content:center; gap:0; }
+.map-hotspots.compact .map-object span { display:none; }
+.map-hotspots.compact .map-object.playing { width:auto; padding:0 12px; gap:6px; }
+.map-hotspots.compact .map-object.playing span { display:inline; }
+.season-name { text-align:center; font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:#8fa58e; margin:20px 0 0; }
+.village-map.season-1 > .landscape { filter:sepia(.16) saturate(1.08) hue-rotate(-10deg); }
+.grow-4 .orchard,.grow-5 .well,.grow-6 .bathhouse,.grow-7 .jetty,.grow-8 .apiary { animation:buildArrive 3s ease-out both; }
+/* Wide screens: tall enough that the whole village (y ≈ 260–580 in the scene) stays in view. */
+@media (min-width: 701px) { .village-map { height: clamp(380px, calc((100vw - 120px) * .52), 560px); } }
