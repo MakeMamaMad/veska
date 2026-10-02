@@ -1,4 +1,4 @@
-const CACHE = "veska-v9-morning-village";
+const CACHE = "veska-v10-russian-voice";
 const ASSETS = [
   "./",
   "./index.html",
