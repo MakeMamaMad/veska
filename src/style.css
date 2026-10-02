@@ -1612,3 +1612,135 @@ dialog p {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* Stable viewport height avoids jumps when mobile browser chrome retracts. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  min-width: 280px;
+  min-height: 100vh;
+  min-height: 100svh;
+}
+.session-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100svh;
+  height: auto;
+}
+.session-controls {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  margin: auto auto 0;
+  padding-top: 32px;
+  padding-bottom: max(32px, env(safe-area-inset-bottom));
+}
+.session-content {
+  margin-bottom: 24px;
+}
+.session-top {
+  padding-top: max(45px, calc(env(safe-area-inset-top) + 20px));
+}
+.sleep-screen {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding-bottom: max(50px, calc(env(safe-area-inset-bottom) + 24px));
+}
+@media (max-width: 700px) {
+  .shell {
+    padding-top: env(safe-area-inset-top);
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+    padding-bottom: calc(110px + env(safe-area-inset-bottom));
+  }
+  .close-button {
+    top: max(20px, env(safe-area-inset-top));
+    right: max(16px, env(safe-area-inset-right));
+    width: 44px;
+    height: 44px;
+  }
+  .session-content {
+    padding-left: max(24px, env(safe-area-inset-left));
+    padding-right: max(24px, env(safe-area-inset-right));
+  }
+  .session-top {
+    padding-top: max(38px, calc(env(safe-area-inset-top) + 20px));
+  }
+  .sleep-screen {
+    padding-top: max(70px, calc(env(safe-area-inset-top) + 48px));
+  }
+  .settings select {
+    font-size: 16px;
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .breathing-orb {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+  }
+  .session-content {
+    margin-top: 20px;
+  }
+  .session-top {
+    padding-left: 70px;
+    padding-right: 70px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  #app.screen-enter {
+    animation: screenArrive 550ms ease-out;
+  }
+  .switch,
+  .timer-option,
+  .sound-card,
+  .bottom-nav button,
+  .close-button {
+    transition:
+      background-color 350ms ease,
+      border-color 350ms ease,
+      color 350ms ease;
+  }
+  .switch span {
+    transition: transform 300ms ease;
+  }
+}
+@keyframes screenArrive {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fog-veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 40% 65%, #abc7b744, transparent 70%);
+  opacity: 1;
+  transition: opacity 2s ease;
+}
+.fog-veil.cleared {
+  opacity: 0;
+}
+.fog-swipe {
+  touch-action: pan-y;
+  position: relative;
+  margin: 20px auto 0;
+  max-width: 100%;
+  min-height: 44px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .fog-veil {
+    transition: none;
+  }
+}

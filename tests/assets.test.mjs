@@ -1,6 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { AMBIENCE, interfaceClickUrl, fogWaterUrl } from "../src/audio.js";
+test("all production ambience and interaction assets are packaged MP3 recordings", () => {
+  for (const url of [...AMBIENCE, interfaceClickUrl, fogWaterUrl]) {
+    assert.match(url, /\.mp3$/);
+    const file = readFileSync(new URL(url));
+    assert.ok(file.length > 10000);
+    assert.ok(
+      file.toString("ascii", 0, 3) === "ID3" ||
+        (file[0] === 255 && (file[1] & 224) === 224),
+    );
+  }
+});
 for (const name of ["rain", "fire", "forest", "wind"])
   test(`${name}: valid PCM recording with headroom and no anomalous seam`, () => {
     const file = readFileSync(

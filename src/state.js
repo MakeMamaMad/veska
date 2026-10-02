@@ -8,7 +8,7 @@ export const fresh = () => ({
   level: 1,
   seconds: 0,
   dates: [],
-  mix: [0.7, 0.3, 0.4, 0.3],
+  mix: [0.25, 0.3, 0.4, 0.3],
   voice: true,
 });
 export function normalize(raw) {

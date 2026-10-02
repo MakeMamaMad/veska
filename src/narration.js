@@ -27,10 +27,11 @@ export class Narrator {
     this.busy = false;
     this.paused = false;
   }
-  async play(ctx, url) {
+  async play(ctx, url, destination = ctx.destination) {
     this.stop();
     if (!url) return;
     this.ctx = ctx;
+    this.destination = destination;
     const token = this.token;
     this.busy = true;
     const controller = new AbortController();
@@ -63,9 +64,9 @@ export class Narrator {
     const source = this.ctx.createBufferSource();
     source.buffer = this.buffer;
     const gain = this.ctx.createGain();
-    gain.gain.value = 0.8;
+    gain.gain.value = 0.9;
     source.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(this.destination || this.ctx.destination);
     source.onended = () => {
       gain.disconnect();
       if (this.source === source) {
@@ -96,5 +97,10 @@ export class Narrator {
     this.offset = 0;
     this.busy = false;
     this.paused = false;
+  }
+  finishAfter(seconds = 8) {
+    this.token++;
+    this.busy = false;
+    if (this.source) this.source.stop(this.ctx.currentTime + seconds);
   }
 }

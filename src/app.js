@@ -7,7 +7,7 @@ import {
   remaining,
   clock,
 } from "./state.js";
-import { Soundscape } from "./audio.js";
+import { Soundscape, interfaceClickUrl, fogWaterUrl } from "./audio.js";
 import {
   Narrator,
   RECORDINGS,
@@ -27,6 +27,7 @@ const app = document.querySelector("#app"),
   audio = new Soundscape();
 audio.volume = [...state.mix];
 const narrator = new Narrator();
+let renderedView = "";
 let audioBusy = false;
 let audioGeneration = 0;
 const preferredSound = () => ({ rain: 0, fire: 1, forest: 2 })[state.sound];
@@ -107,7 +108,7 @@ function profile() {
 }
 function sessionView() {
   const c = t();
-  return `<section class="session-screen">${landscape(Math.max(2, session.chapter + 2))}<div class="session-shade"></div><button class="close-button" data-action="exit" aria-label="${c.exit}">${icon("close")}</button><div class="session-top"><p class="eyebrow">${c.session}</p><span>${c.chapters[session.chapter]} · elevenlabs.io</span></div><div class="session-content"><div class="breathing-orb ${session.paused ? "paused" : ""}">${icon(session.lit ? "sun" : "leaf")}</div><p class="eyebrow">${c.breathe}</p>${hasNarration(state.lang, session.chapter) ? "" : `<p class="narration-note">${c.narrationPending}</p>`}<p class="story-text">${stories[state.lang][session.chapter][session.stage]}</p>${session.stage === 1 ? button(session.lit ? c.lightDone : `${icon("sun")}${c.light}`, "light", "lantern", session.lit ? "disabled" : "") : ""}</div><div class="session-controls"><div class="session-time"><span id="session-time">${clock(session.elapsed)}</span><span>03:00</span></div><progress id="session-progress" max="180" value="${session.elapsed}" aria-label="${c.session}"></progress>${button(`${icon(session.paused ? "play" : "pause")}${session.paused ? c.resume : c.pause}`, "pause", "quiet-button")}</div><dialog id="exit-dialog"><h2>${c.exit}?</h2><p class="muted">${c.exitNote}</p><div class="dialog-buttons">${button(c.stay, "stay")}${button(c.leave, "leave", "quiet-button")}</div></dialog></section>`;
+  return `<section class="session-screen">${landscape(Math.max(2, session.chapter + 2))}<div class="session-shade"></div>${session.stage === 0 ? `<div class="fog-veil ${session.fogCleared ? "cleared" : ""}" aria-hidden="true"></div>` : ""}<button class="close-button" data-action="exit" aria-label="${c.exit}">${icon("close")}</button><div class="session-top"><p class="eyebrow">${c.session}</p><span>${c.chapters[session.chapter]} · elevenlabs.io</span></div><div class="session-content"><div class="breathing-orb ${session.paused ? "paused" : ""}">${icon(session.lit ? "sun" : "leaf")}</div><p class="eyebrow">${c.breathe}</p>${hasNarration(state.lang, session.chapter) ? "" : `<p class="narration-note">${c.narrationPending}</p>`}<p class="story-text">${stories[state.lang][session.chapter][session.stage]}</p>${session.stage === 0 ? button(session.fogCleared ? c.fogDone : c.fog, "fog", "fog-swipe quiet-button", `aria-label="${c.fog}"`) : ""}${session.stage === 1 ? button(session.lit ? c.lightDone : `${icon("sun")}${c.light}`, "light", "lantern", session.lit ? "disabled" : "") : ""}</div><div class="session-controls"><div class="session-time"><span id="session-time">${clock(session.elapsed)}</span><span>03:00</span></div><progress id="session-progress" max="180" value="${session.elapsed}" aria-label="${c.session}"></progress>${button(`${icon(session.paused ? "play" : "pause")}${session.paused ? c.resume : c.pause}`, "pause", "quiet-button")}</div><dialog id="exit-dialog"><h2>${c.exit}?</h2><p class="muted">${c.exitNote}</p><div class="dialog-buttons">${button(c.stay, "stay")}${button(c.leave, "leave", "quiet-button")}</div></dialog></section>`;
 }
 function completedView() {
   const c = t();
@@ -118,6 +119,12 @@ function sleepView() {
   return `<section class="sleep-screen"><button class="close-button" data-action="sleep-exit" aria-label="${c.return}">${icon("close")}</button><div class="sleep-house">${icon("home")}<i></i></div><p class="eyebrow">${sleep.finished ? c.sleepEndNote : c.sleepSub}</p><h1>${sleep.finished ? c.sleepEnd : c.sleepTitle}</h1><div class="sleep-time" id="sleep-time" role="timer" aria-label="${c.timer}">${clock(sleep.finished ? 0 : remaining(sleep.deadline))}</div><p class="timer-label">${c.timer}</p><div class="timer-options">${[15, 30, 45, 0].map((v) => button(v === 0 ? "∞" : `${v} ${c.min}`, "timer", `timer-option ${sleep.minutes === v ? "chosen" : ""}`, `data-minutes="${v}" aria-label="${v === 0 ? c.infinity : `${v} ${c.min}`}" aria-pressed="${sleep.minutes === v}"`)).join("")}</div>${button(`${icon(sleep.paused ? "play" : "pause")}${sleep.paused ? c.resume : c.pause}`, "sleep-pause", "sleep-pause", sleep.finished ? "disabled" : "")}<span class="sleep-brand">Vёska</span></section>`;
 }
 function render(focus = false) {
+  const view = screen === "onboarding" ? `${screen}-${onboarding}` : screen;
+  if (view !== renderedView) {
+    app.classList.remove("screen-enter");
+    window.requestAnimationFrame?.(() => app.classList.add("screen-enter"));
+    renderedView = view;
+  }
   document.documentElement.lang = state.lang;
   document.title = `Vёska — ${t().tag} · elevenlabs.io`;
   app.innerHTML =
@@ -152,7 +159,11 @@ function narrate() {
   )
     return;
   narrator
-    .play(audio.ctx, RECORDINGS[state.lang][session.chapter][session.stage])
+    .play(
+      audio.ctx,
+      RECORDINGS[state.lang][session.chapter][session.stage],
+      audio.output,
+    )
     .catch(() => toast(t().narrationMissing));
 }
 async function ensureAudio(
@@ -177,11 +188,7 @@ async function ensureAudio(
   }
 }
 function setPreferred() {
-  audio.active.fill(false);
-  audio.active[{ rain: 0, fire: 1, forest: 2 }[state.sound]] = true;
-  audio.paused = false;
-  audio.setMaster();
-  audio.apply();
+  audio.startBedtime(preferredSound());
 }
 async function fullScreen() {
   try {
@@ -195,12 +202,13 @@ function exitFullscreen() {
 }
 function endAudio() {
   audioGeneration++;
-  cancelVoice();
-  audio.stop();
+  narrator.finishAfter(8);
+  audio.fadeOut(8);
   save();
 }
 async function startSession() {
   if (!(await ensureAudio([preferredSound()]))) return;
+  cancelVoice();
   session = {
     chapter: state.level === 5 ? replay : state.level - 1,
     stage: 0,
@@ -208,8 +216,11 @@ async function startSession() {
     stageElapsed: 0,
     paused: false,
     lit: false,
+    fogCleared: false,
   };
   setPreferred();
+  audio.preloadEffect(interfaceClickUrl).catch(() => {});
+  audio.preloadEffect(fogWaterUrl).catch(() => {});
   screen = "session";
   render(true);
   fullScreen();
@@ -217,6 +228,7 @@ async function startSession() {
 }
 function startSleep() {
   cancelVoice();
+  if (audio.fading) setPreferred();
   sleep = {
     minutes: 30,
     deadline: Date.now() + 30 * 60000,
@@ -284,11 +296,15 @@ app.addEventListener("click", async (e) => {
       action === "object"
         ? objectSounds[Number(b.dataset.index)]
         : Number(b.dataset.index);
-    if (!(await ensureAudio([i]))) return;
-    audio.active[i] = !audio.active[i];
-    audio.paused = false;
-    audio.setMaster();
-    audio.apply();
+    const enabled = !audio.active[i];
+    if (audio.fading) cancelVoice();
+    const pending = audio.setChannel(i, enabled);
+    render();
+    try {
+      await pending;
+    } catch {
+      toast(c.audioError);
+    }
     render();
   } else if (action === "stop") {
     endAudio();
@@ -308,14 +324,16 @@ app.addEventListener("click", async (e) => {
     if (session.paused && !(await ensureAudio())) return;
     togglePause();
   } else if (action === "light") {
+    if (!session || session.paused || session.lit || session.stage !== 1)
+      return;
     session.lit = true;
+    audio.playEffect(interfaceClickUrl, 0.4);
     render();
+  } else if (action === "fog") {
+    disperseFog();
   } else if (action === "exit") {
     session.wasPaused = session.paused;
     session.paused = true;
-    audio.paused = true;
-    audio.apply();
-    narrator.pause();
     render();
     const d = document.querySelector("#exit-dialog");
     d.showModal();
@@ -384,6 +402,40 @@ function restoreSession() {
   render();
   if (!session.paused) narrator.resume();
 }
+function disperseFog() {
+  if (
+    !session ||
+    screen !== "session" ||
+    session.stage !== 0 ||
+    session.paused ||
+    session.fogCleared
+  )
+    return;
+  session.fogCleared = true;
+  document.querySelector(".fog-veil")?.classList.add("cleared");
+  const control = document.querySelector(".fog-swipe");
+  if (control) control.textContent = t().fogDone;
+  audio.playEffect(fogWaterUrl, 0.08);
+}
+let fogPointer = null;
+app.addEventListener("pointerdown", (e) => {
+  if (e.target.closest(".fog-swipe"))
+    fogPointer = { id: e.pointerId, x: e.clientX, y: e.clientY };
+});
+app.addEventListener("pointerup", (e) => {
+  const start = fogPointer;
+  fogPointer = null;
+  if (
+    start &&
+    start.id === e.pointerId &&
+    Math.abs(e.clientX - start.x) >= 44 &&
+    Math.abs(e.clientY - start.y) < 60
+  )
+    disperseFog();
+});
+app.addEventListener("pointercancel", () => {
+  fogPointer = null;
+});
 app.addEventListener("input", (e) => {
   if (e.target.matches("[data-volume]")) {
     const i = Number(e.target.dataset.volume);
@@ -431,7 +483,7 @@ setInterval(() => {
     if (session.stage === 3 && segmentDone) {
       state = complete(state);
       save();
-      cancelVoice();
+      endAudio();
       screen = "completed";
       render(true);
     } else if (segmentDone) {

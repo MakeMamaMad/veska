@@ -1,15 +1,52 @@
 export const AMBIENCE = ["rain", "fire", "forest", "wind"].map(
-  (name) => new URL(`../assets/audio/${name}.wav`, import.meta.url).href,
+  (name) => new URL(`../assets/audio/${name}.mp3`, import.meta.url).href,
 );
+export const interfaceClickUrl = new URL(
+  "../assets/audio/interface-click.mp3",
+  import.meta.url,
+).href;
+export const fogWaterUrl = new URL(
+  "../assets/audio/fog-water.mp3",
+  import.meta.url,
+).href;
 
-// Real recordings, prepared as seamless PCM loops. No generated noise fallback.
+// Recorded MP3 files decoded once into gapless PCM loops. No noise synthesis.
 export class Soundscape {
   constructor() {
     this.ctx = null;
     this.channels = [];
     this.active = [false, false, false, false];
-    this.volume = [0.7, 0.3, 0.4, 0.3];
+    this.volume = [0.25, 0.3, 0.4, 0.3];
     this.paused = false;
+    this.revision = 0;
+    this.channelRevision = [0, 0, 0, 0];
+    this.effects = new Map();
+    this.sessionMode = false;
+  }
+  async setChannel(index, enabled) {
+    if (!Number.isInteger(index) || index < 0 || index >= AMBIENCE.length)
+      return;
+    if (enabled && this.fading) this.stop();
+    const revision = this.revision;
+    const request = ++this.channelRevision[index];
+    this.active[index] = enabled;
+    if (!enabled) {
+      this.apply();
+      return;
+    }
+    this.paused = false;
+    try {
+      await this.init([index]);
+      if (revision !== this.revision || request !== this.channelRevision[index])
+        return;
+      this.apply();
+    } catch (error) {
+      if (revision !== this.revision || request !== this.channelRevision[index])
+        return;
+      this.active[index] = false;
+      this.apply();
+      throw error;
+    }
   }
   async init(indices = []) {
     if (!this.ctx) {
@@ -17,8 +54,11 @@ export class Soundscape {
       if (!AudioContext) throw new Error("Audio unsupported");
       this.ctx = new AudioContext();
       this.master = this.ctx.createGain();
-      this.master.gain.value = 0.55;
-      this.master.connect(this.ctx.destination);
+      this.master.gain.value = 1;
+      this.output = this.ctx.createGain();
+      this.output.gain.value = 1;
+      this.master.connect(this.output);
+      this.output.connect(this.ctx.destination);
       this.channels = AMBIENCE.map(() => {
         const gain = this.ctx.createGain();
         gain.gain.value = 0;
@@ -65,34 +105,122 @@ export class Soundscape {
   }
   apply() {
     if (!this.ctx) return;
-    this.channels.forEach((channel, index) =>
+    const sum = this.active.reduce(
+      (total, on, i) => total + (on ? this.volume[i] : 0),
+      0,
+    );
+    this.master.gain.setTargetAtTime(
+      this.sessionMode ? 1 : 1 / Math.max(1, sum),
+      this.ctx.currentTime,
+      0.45,
+    );
+    this.channels.forEach((channel, index) => {
+      const gain = channel.gain.gain;
+      if (gain.cancelAndHoldAtTime)
+        gain.cancelAndHoldAtTime(this.ctx.currentTime);
+      else {
+        const value = gain.value;
+        gain.cancelScheduledValues(this.ctx.currentTime);
+        gain.setValueAtTime(value, this.ctx.currentTime);
+      }
       channel.gain.gain.setTargetAtTime(
-        this.active[index] && !this.paused ? this.volume[index] : 0,
+        this.active[index] && !this.paused
+          ? this.sessionMode
+            ? 0.25
+            : this.volume[index]
+          : 0,
         this.ctx.currentTime,
         0.45,
-      ),
-    );
+      );
+    });
   }
-  setMaster(value = 0.55) {
+  setMaster(value = 1) {
     if (!this.ctx) return;
-    this.master.gain.cancelScheduledValues(this.ctx.currentTime);
-    this.master.gain.setTargetAtTime(value, this.ctx.currentTime, 0.15);
+    this.output.gain.cancelScheduledValues(this.ctx.currentTime);
+    this.output.gain.setTargetAtTime(value, this.ctx.currentTime, 0.15);
   }
   scheduleSleep(seconds) {
     if (!this.ctx) return;
     const time = this.ctx.currentTime;
-    this.master.gain.cancelScheduledValues(time);
-    this.master.gain.setValueAtTime(0.55, time);
+    this.output.gain.cancelScheduledValues(time);
+    this.output.gain.setValueAtTime(1, time);
     if (Number.isFinite(seconds)) {
-      this.master.gain.setValueAtTime(0.55, time + Math.max(0, seconds - 10));
-      this.master.gain.linearRampToValueAtTime(0, time + seconds);
+      this.output.gain.setValueAtTime(1, time + Math.max(0, seconds - 8));
+      this.output.gain.linearRampToValueAtTime(0, time + seconds);
     }
   }
   stop() {
+    this.revision++;
+    this.fading = false;
+    this.sessionMode = false;
     this.active.fill(false);
     this.paused = false;
-    this.apply();
+    if (this.ctx)
+      this.channels.forEach((c) => {
+        c.gain.gain.cancelScheduledValues(this.ctx.currentTime);
+        c.gain.gain.setValueAtTime(0, this.ctx.currentTime);
+      });
     this.setMaster();
+  }
+  startBedtime(index) {
+    this.stop();
+    this.sessionMode = true;
+    this.active[index] = true;
+    const time = this.ctx.currentTime;
+    this.output.gain.cancelScheduledValues(time);
+    this.output.gain.setValueAtTime(1, time);
+    this.master.gain.cancelScheduledValues(time);
+    this.master.gain.setValueAtTime(1, time);
+    const gain = this.channels[index].gain.gain;
+    gain.setValueAtTime(0, time);
+    gain.linearRampToValueAtTime(0.25, time + 4);
+  }
+  fadeOut(seconds = 8) {
+    this.revision++;
+    this.active.fill(false);
+    this.fading = true;
+    if (!this.ctx) return;
+    const time = this.ctx.currentTime,
+      gain = this.output.gain;
+    if (gain.cancelAndHoldAtTime) gain.cancelAndHoldAtTime(time);
+    else {
+      const value = gain.value;
+      gain.cancelScheduledValues(time);
+      gain.setValueAtTime(value, time);
+    }
+    gain.linearRampToValueAtTime(0, time + seconds);
+  }
+  async preloadEffect(url) {
+    if (!this.effects.has(url)) {
+      const pending = (async () => {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Effect unavailable");
+        return this.ctx.decodeAudioData(await response.arrayBuffer());
+      })();
+      this.effects.set(url, pending);
+      pending.catch(() => this.effects.delete(url));
+    }
+    return this.effects.get(url);
+  }
+  async playEffect(url, volume) {
+    const revision = this.revision;
+    try {
+      const buffer = await this.preloadEffect(url);
+      if (revision !== this.revision || this.paused || this.fading) return;
+      const source = this.ctx.createBufferSource(),
+        gain = this.ctx.createGain();
+      source.buffer = buffer;
+      gain.gain.value = volume;
+      source.connect(gain);
+      gain.connect(this.output);
+      source.onended = () => {
+        source.disconnect();
+        gain.disconnect();
+      };
+      source.start();
+    } catch {
+      /* Optional tactile sounds must never interrupt a bedtime story. */
+    }
   }
   get playing() {
     return (

@@ -16,6 +16,7 @@ test("all bilingual chapters have four existing narration files", async () => {
 test("narration resumes from the paused offset instead of restarting", () => {
   const n = new Narrator();
   const starts = [];
+  const gains = [];
   n.ctx = {
     currentTime: 0,
     createBufferSource: () => ({
@@ -25,10 +26,15 @@ test("narration resumes from the paused offset instead of restarting", () => {
         this.onended?.();
       },
     }),
-    createGain: () => ({ gain: { value: 0 }, connect() {}, disconnect() {} }),
+    createGain: () => {
+      const node = { gain: { value: 0 }, connect() {}, disconnect() {} };
+      gains.push(node);
+      return node;
+    },
   };
   n.buffer = { duration: 30 };
   n.resume();
+  assert.equal(gains[0].gain.value, 0.9);
   n.ctx.currentTime = 9;
   n.pause();
   assert.equal(n.offset, 9);
@@ -41,12 +47,22 @@ test("narration resumes from the paused offset instead of restarting", () => {
 
 test("stopping during a download prevents late narration from starting", async (t) => {
   let deliver;
-  t.mock.method(globalThis, "fetch", () => new Promise(resolve => { deliver = resolve; }));
+  t.mock.method(
+    globalThis,
+    "fetch",
+    () =>
+      new Promise((resolve) => {
+        deliver = resolve;
+      }),
+  );
   const narrator = new Narrator();
   let starts = 0;
   const context = {
     decodeAudioData: async () => ({ duration: 20 }),
-    createBufferSource: () => { starts++; throw new Error("must not start"); },
+    createBufferSource: () => {
+      starts++;
+      throw new Error("must not start");
+    },
   };
   const pending = narrator.play(context, "../assets/narration/ru-1-1.mp3");
   assert.equal(narrator.busy, true);
@@ -60,6 +76,9 @@ test("stopping during a download prevents late narration from starting", async (
 test("a missing recording releases the scene instead of hanging the session", async (t) => {
   t.mock.method(globalThis, "fetch", async () => ({ ok: false }));
   const narrator = new Narrator();
-  await assert.rejects(narrator.play({}, "../assets/narration/missing.mp3"), /unavailable/);
+  await assert.rejects(
+    narrator.play({}, "../assets/narration/missing.mp3"),
+    /unavailable/,
+  );
   assert.equal(narrator.busy, false);
 });

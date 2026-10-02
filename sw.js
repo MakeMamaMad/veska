@@ -1,4 +1,4 @@
-const CACHE = "veska-v2-recorded-audio";
+const CACHE = "veska-v3-mobile-mixer";
 const ASSETS = [
   "./",
   "./index.html",
