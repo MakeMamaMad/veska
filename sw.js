@@ -1,4 +1,4 @@
-const CACHE = "veska-v1-20261002a";
+const CACHE = "veska-v1-20261002b";
 const ASSETS = [
   "./",
   "./index.html",
@@ -12,7 +12,11 @@ const ASSETS = [
   "./src/style.css",
 ];
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)));
+  event.waitUntil(
+    caches.open(CACHE)
+      .then((cache) => cache.addAll(ASSETS.map(url => new Request(url, {cache: "reload"}))))
+      .then(() => self.skipWaiting()),
+  );
 });
 self.addEventListener("activate", (event) => {
   event.waitUntil(
@@ -24,7 +28,8 @@ self.addEventListener("activate", (event) => {
             .filter((k) => k.startsWith("veska-") && k !== CACHE)
             .map((k) => caches.delete(k)),
         ),
-      ),
+      )
+      .then(() => self.clients.claim()),
   );
 });
 self.addEventListener("fetch", (event) => {
@@ -34,7 +39,7 @@ self.addEventListener("fetch", (event) => {
   )
     return;
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, { cache: "no-cache" })
       .then((response) => {
         if (response.ok) {
           const clone = response.clone();
@@ -55,3 +60,4 @@ self.addEventListener("fetch", (event) => {
       ),
   );
 });
+
