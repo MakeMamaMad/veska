@@ -1,10 +1,75 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import {fresh,load,normalize,complete,streak,remaining,clock} from '../src/state.js';
-test('first launch has empty village and onboarding',()=>{assert.equal(fresh().level,1);assert.equal(fresh().onboarded,false);});
-test('corrupt or blocked storage safely starts fresh',()=>{assert.deepEqual(load({getItem:()=>'{broken'}),fresh());assert.deepEqual(load({getItem(){throw new Error('blocked');}}),fresh());});
-test('normalization constrains saved data',()=>{const s=normalize({level:999,lang:'bad',seconds:-10,mix:[3,-2,NaN,.6],dates:['bad','2026-10-01','2026-10-01']});assert.equal(s.level,5);assert.equal(s.lang,'ru');assert.equal(s.seconds,0);assert.deepEqual(s.mix,[1,0,.4,.6]);assert.deepEqual(s.dates,['2026-10-01']);});
-test('each completed session unlocks exactly one object and caps at four',()=>{let s=fresh();for(let i=0;i<8;i++){s=complete(s,new Date(2026,9,2));assert.equal(s.level,Math.min(i+2,5));}assert.deepEqual(s.dates,['2026-10-02']);});
-test('local-day streak handles yesterday, gaps and month boundaries',()=>{const now=new Date(2026,9,2,0,1);assert.equal(streak(['2026-09-30','2026-10-01','2026-10-02'],now),3);assert.equal(streak(['2026-09-30','2026-10-01'],now),2);assert.equal(streak(['2026-09-30'],now),0);assert.equal(streak(['2026-09-29','2026-10-01','2026-10-02'],now),2);});
-test('sleep uses a wall-clock deadline after background suspension',()=>{const start=100000;assert.equal(remaining(start+900000,start+45000),855);assert.equal(remaining(start+900000,start+1000000),0);assert.equal(remaining(null),Infinity);assert.equal(clock(1455),'24:15');assert.equal(clock(0),'00:00');assert.equal(clock(Infinity),'∞');});
-test('serialized state restores preferences and progress',()=>{const saved={...complete(fresh()),onboarded:true,lang:'en',mix:[.7,.3,0,0],seconds:180,voice:false};assert.deepEqual(load({getItem:()=>JSON.stringify(saved)}),saved);});
+import test from "node:test";
+import assert from "node:assert/strict";
+import {
+  fresh,
+  load,
+  normalize,
+  complete,
+  streak,
+  remaining,
+  clock,
+} from "../src/state.js";
+test("first launch has empty village and onboarding", () => {
+  assert.equal(fresh().level, 1);
+  assert.equal(fresh().onboarded, false);
+});
+test("corrupt or blocked storage safely starts fresh", () => {
+  assert.deepEqual(load({ getItem: () => "{broken" }), fresh());
+  assert.deepEqual(
+    load({
+      getItem() {
+        throw new Error("blocked");
+      },
+    }),
+    fresh(),
+  );
+});
+test("normalization constrains saved data", () => {
+  const s = normalize({
+    level: 999,
+    lang: "bad",
+    seconds: -10,
+    mix: [3, -2, NaN, 0.6],
+    dates: ["bad", "2026-10-01", "2026-10-01"],
+  });
+  assert.equal(s.level, 5);
+  assert.equal(s.lang, "ru");
+  assert.equal(s.seconds, 0);
+  assert.deepEqual(s.mix, [1, 0, 0.4, 0.6]);
+  assert.deepEqual(s.dates, ["2026-10-01"]);
+});
+test("each completed session unlocks exactly one object and caps at four", () => {
+  let s = fresh();
+  for (let i = 0; i < 8; i++) {
+    s = complete(s, new Date(2026, 9, 2));
+    assert.equal(s.level, Math.min(i + 2, 5));
+  }
+  assert.deepEqual(s.dates, ["2026-10-02"]);
+});
+test("local-day streak handles yesterday, gaps and month boundaries", () => {
+  const now = new Date(2026, 9, 2, 0, 1);
+  assert.equal(streak(["2026-09-30", "2026-10-01", "2026-10-02"], now), 3);
+  assert.equal(streak(["2026-09-30", "2026-10-01"], now), 2);
+  assert.equal(streak(["2026-09-30"], now), 0);
+  assert.equal(streak(["2026-09-29", "2026-10-01", "2026-10-02"], now), 2);
+});
+test("sleep uses a wall-clock deadline after background suspension", () => {
+  const start = 100000;
+  assert.equal(remaining(start + 900000, start + 45000), 855);
+  assert.equal(remaining(start + 900000, start + 1000000), 0);
+  assert.equal(remaining(null), Infinity);
+  assert.equal(clock(1455), "24:15");
+  assert.equal(clock(0), "00:00");
+  assert.equal(clock(Infinity), "∞");
+});
+test("serialized state restores preferences and progress", () => {
+  const saved = {
+    ...complete(fresh()),
+    onboarded: true,
+    lang: "en",
+    mix: [0.7, 0.3, 0, 0],
+    seconds: 180,
+    voice: false,
+  };
+  assert.deepEqual(load({ getItem: () => JSON.stringify(saved) }), saved);
+});
