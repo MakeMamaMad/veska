@@ -125,19 +125,19 @@ test("voiced journey: natural ends advance the day; missed speech and exit do no
   assert.equal(saved().pending.chapter,0);
   assert.equal(saved().currentDay,1,'no building in the middle of the night');
   await click('exit');await click('leave');
-  assert.match(app.innerHTML,/Утром здесь появится Млын/);
+  assert.match(app.innerHTML,/Утром здесь появится Мельница/);
   await click('start');advance(600);
   assert.equal(saved().currentDay,1,'a second evening the same night does not build twice');
   await click('exit');await click('leave');
   wall+=10*3600e3;
   await click('tab',{tab:'village'});
   assert.match(app.innerHTML,/За ночь твой хутор подрос/);
-  assert.match(app.innerHTML,/Млын/);
+  assert.match(app.innerHTML,/Мельница/);
   await click('mood',{mood:'3'});
   assert.deepEqual(saved().sleepLog.at(-1).mood,3);
   await click('morning-go');
   assert.equal(saved().currentDay,2);assert.equal(values.get('currentDay'),'2');
-  assert.match(app.innerHTML,/День 2: Млын/);assert.match(app.innerHTML,/Начать сеанс: День 2/);
+  assert.match(app.innerHTML,/День 2: Мельница/);assert.match(app.innerHTML,/Начать сеанс: День 2/);
   await click('tab',{tab:'sounds'});assert.match(app.innerHTML,/Тихий скрип мельницы/);
   // Short evening: story at once, counted after seven minutes.
   await click('tab',{tab:'village'});await click('length',{length:'short'});
