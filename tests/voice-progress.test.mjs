@@ -35,7 +35,7 @@ test("voiced journey: natural ends advance the day; missed speech and exit do no
   };
   let tick,
     context,
-    wall = 1800000000000;
+    wall = new Date(2027, 0, 15, 21, 0).getTime(); // a local evening, in any time zone
   globalThis.setInterval = (fn) => {
     tick = fn;
   };
@@ -113,21 +113,38 @@ test("voiced journey: natural ends advance the day; missed speech and exit do no
   const {buildSessionPlan}=await import('../src/session-plan.js');
   const flush=()=>new Promise(resolve=>setImmediate(resolve));
   const finishCue=async()=>{await flush();const source=sources.at(-1);assert.ok(source.duration>0);source.onended();source.onended();};
+  // A voiced evening counts at the end of the story phase, even if the listener fell asleep
+  // and never heard the last phrase. The next building appears the following morning.
   await click('start');
-  const firstPlan=buildSessionPlan('ru',0);let elapsed=0;
-  for(const cue of firstPlan){advance(Math.ceil(cue.at)-elapsed);elapsed=Math.ceil(cue.at);await finishCue();}
-  assert.equal(saved().currentDay,2);assert.equal(values.get('currentDay'),'2');
+  advance(539);
+  assert.equal(saved().pending,null,'leaving before the story ends earns nothing');
   await click('exit');await click('leave');
+  assert.equal(saved().currentDay,1);
+  await click('start');
+  advance(540);
+  assert.equal(saved().pending.chapter,0);
+  assert.equal(saved().currentDay,1,'no building in the middle of the night');
+  await click('exit');await click('leave');
+  assert.match(app.innerHTML,/Утром здесь появится Млын/);
+  await click('start');advance(600);
+  assert.equal(saved().currentDay,1,'a second evening the same night does not build twice');
+  await click('exit');await click('leave');
+  wall+=10*3600e3;
+  await click('tab',{tab:'village'});
+  assert.match(app.innerHTML,/За ночь твой хутор подрос/);
+  assert.match(app.innerHTML,/Млын/);
+  await click('mood',{mood:'3'});
+  assert.deepEqual(saved().sleepLog.at(-1).mood,3);
+  await click('morning-go');
+  assert.equal(saved().currentDay,2);assert.equal(values.get('currentDay'),'2');
   assert.match(app.innerHTML,/День 2: Млын/);assert.match(app.innerHTML,/Начать сеанс: День 2/);
   await click('tab',{tab:'sounds'});assert.match(app.innerHTML,/Тихий скрип мельницы/);
-  await click('tab',{tab:'village'});await click('start');
-  const secondPlan=buildSessionPlan('ru',1);elapsed=0;
-  for(const [i,cue] of secondPlan.entries()){
-    advance(Math.ceil(cue.at)-elapsed);elapsed=Math.ceil(cue.at);
-    if(i===0)await flush();else await finishCue();
-  }
-  advance(840-elapsed);assert.equal(saved().currentDay,2,'timeline alone must not reward a voiced session');
-  await click('sleep-exit');await click('start');elapsed=0;
-  for(const cue of secondPlan){advance(Math.ceil(cue.at)-elapsed);elapsed=Math.ceil(cue.at);await finishCue();}
-  assert.equal(saved().currentDay,3);assert.equal(values.get('currentDay'),'3');
+  // Short evening: story at once, counted after seven minutes.
+  await click('tab',{tab:'village'});await click('length',{length:'short'});
+  assert.match(app.innerHTML,/role="radio" aria-checked="true" data-action="length" data-length="short"/);
+  await click('start');
+  assert.match(app.innerHTML,/phase-breathing/);
+  assert.match(app.innerHTML,/10:00/);
+  advance(420);
+  assert.equal(saved().pending.chapter,1);
 });

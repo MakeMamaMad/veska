@@ -1854,3 +1854,49 @@ html:has(#mix-sheet[open]) { overflow:hidden; }
 .session-screen > .landscape, .completed-screen > .landscape {
   width:100%; height:100%; object-fit:cover;
 }
+
+/* ---- Evening length ---- */
+.length-picker { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:16px 0 4px; }
+.length-option { display:flex; flex-direction:column; align-items:flex-start; gap:3px; text-align:left; padding:11px 13px; min-height:44px; border-radius:12px; border:1px solid #9bad8a33; background:transparent; color:var(--muted); }
+.length-option strong { font-weight:500; font-size:.82rem; color:var(--text); }
+.length-option small { font-size:.68rem; line-height:1.35; }
+.length-option.chosen { border-color:#d7e5bb99; background:#d7e5bb14; }
+.length-option.chosen strong { color:var(--accent); }
+
+/* ---- Start dock: the main action always sits above the tab bar on phones ---- */
+.start-dock { display:none; }
+@media (max-width:700px) {
+  .story-card .start-button { display:none; }
+  .start-dock {
+    display:block; position:sticky; z-index:9;
+    bottom:calc(84px + env(safe-area-inset-bottom));
+    margin:18px -4px 0; padding-top:22px;
+    background:linear-gradient(#10272100, var(--bg) 20px);
+  }
+  .start-dock .primary { width:100%; box-shadow:0 8px 28px #0006; animation:softPulse 5s ease-in-out infinite; }
+  .village-map { height:clamp(230px, 38dvh, 350px); }
+  .village-progress { margin-top:16px; }
+}
+
+/* ---- Morning: the building appears the day after an evening ---- */
+.progress-place.pending { color:var(--warm); }
+.progress-place.pending > span { border-style:dashed; border-color:#d8b47e88; }
+.morning-screen { position:relative; min-height:100vh; min-height:100dvh; overflow:hidden; background:#18342c; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding:0 max(20px,env(safe-area-inset-right)) max(28px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left)); }
+.morning-screen > .landscape { position:absolute; top:0; left:0; width:100%; height:62%; filter:saturate(1.1) brightness(1.2); }
+.morning-light { position:absolute; inset:0; pointer-events:none; background:radial-gradient(90% 45% at 75% 4%, #f1d9a366, transparent 65%), linear-gradient(#e8c99018 0%, transparent 35%, #18342c 62%); }
+.morning-card { position:relative; width:min(100%,520px); background:#173328ee; border:1px solid #cad6b326; border-radius:24px; padding:28px; animation:morningRise 1.4s ease-out both; }
+.morning-card h1 { font-size:clamp(1.7rem,6vw,2.2rem); margin:6px 0 10px; }
+.morning-card strong { color:var(--warm); font-weight:500; }
+.morning-card .mood { border:0; padding:0; margin:22px 0 0; }
+.morning-card legend { font-size:.9rem; margin-bottom:10px; padding:0; }
+.morning-card .chip { min-height:44px; }
+.mood-thanks { font-size:.78rem; color:var(--muted); margin:12px 0 0; }
+.morning-card > .primary { width:100%; margin-top:24px; }
+@keyframes morningRise { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:none; } }
+
+/* ---- Session extras ---- */
+.session-buttons { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px 14px; }
+.session-buttons .text-button { min-height:44px; }
+.earned-note { display:inline-flex; align-items:center; gap:8px; font-size:.78rem; color:#9fb48b; margin:4px 0 0; }
+.earned-note svg { width:15px; height:15px; }
+@media (prefers-reduced-motion:reduce) { .morning-card, .start-dock .primary { animation:none; } }
